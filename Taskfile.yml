@@ -8,7 +8,7 @@ tasks:
   dev:backend:
     desc: "Start backend locally"
     dir: "api/src"
-    cmd: uv run uvicorn main:create_app --factory --reload --port 8000
+    cmd: uv run python run.py
 
   dev:frontend:
     desc: "Start frontend locally"
