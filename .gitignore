@@ -1,2 +1,5 @@
 context
 .env.k8s.local
+.env
+!.env.example
+!.env.k8s.local.example
