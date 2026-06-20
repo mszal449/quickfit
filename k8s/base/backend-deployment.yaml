@@ -32,11 +32,11 @@ spec:
                 name: backend-secret
           readinessProbe: # TODO: replace with /health
             httpGet:
-              path: /openapi.json
+              path: /api/health
               port: 8000
             initialDelaySeconds: 3
           livenessProbe:
             httpGet:
-              path: /openapi.json
+              path: /api/health
               port: 8000
             initialDelaySeconds: 15

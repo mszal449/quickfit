@@ -37,7 +37,6 @@ class ServiceConfig(EnvBaseSettings):
     google_oauth_config: GoogleOAuthConfig = Field(default_factory=GoogleOAuthConfig) # type: ignore[call-arg]
 
 
-
 @lru_cache
 def get_config() -> ServiceConfig:
     return ServiceConfig()
