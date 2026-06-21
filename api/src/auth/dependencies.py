@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 
-from auth.security import decode_access_token
+from auth.security import InvalidTokenError, decode_access_token
 from config.middleware import DbSession
 from models.user import User, UserRole
 
@@ -11,7 +11,10 @@ async def get_current_user(req: Request, db: DbSession) -> User:
     token = req.cookies.get("access_token")
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-    payload = decode_access_token(token)
+    try:
+        payload = decode_access_token(token)
+    except InvalidTokenError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
     user = await User.get(db, payload.sub)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)

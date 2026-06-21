@@ -38,25 +38,27 @@ async def google_callback(code: str, state: str, req: Request, db: DbSession):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid callback response")
     access, refresh = await handle_google_callback(db, code)
 
-    res = RedirectResponse("/")
+    res = RedirectResponse("/login")
     set_auth_cookies(res, access, refresh)
     return res
 
 @router.post("/refresh", status_code=status.HTTP_204_NO_CONTENT)
-async def refresh(db: DbSession, req: Request, res: Response):
+async def refresh(db: DbSession, req: Request):
     raw = req.cookies.get("refresh_token")
     if not raw:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token provided")
-    
+
     token = await get_valid_refresh_token(db, raw)
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not valid")
 
     await revoke_refresh_token(db, token)
-    access, refresh = await generate_token_pair(db, token.user_id)
-    set_auth_cookies(res, access, refresh)
+    access, new_refresh = await generate_token_pair(db, token.user_id)
+
+    res = Response(status_code=status.HTTP_204_NO_CONTENT)
+    set_auth_cookies(res, access, new_refresh)
     return res
-    
+
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(req: Request, db: DbSession):

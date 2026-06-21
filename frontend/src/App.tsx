@@ -1,13 +1,24 @@
-import './App.css'
-import { useHealthApiHealthGet } from './api/generated/health/health'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import HomePage from "./Pages/HomePage";
+import LoginPage from "./auth/LoginPage";
+import ProtectedRoute from "./auth/protectedRoute";
+import WorkoutsPage from "./Pages/WorkoutsPage";
 
 function App() {
-  const { data, isLoading, error } = useHealthApiHealthGet()
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-  if (isLoading) return <p>Loading...</p>
-  if (error) return <p>Error: {String(error)}</p>
-  return <pre>{JSON.stringify(data)}</pre>
-
+        {/* Protected */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/workouts" element={<WorkoutsPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
