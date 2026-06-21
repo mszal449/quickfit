@@ -14,7 +14,7 @@ async def get_current_user(req: Request, db: DbSession) -> User:
     try:
         payload = decode_access_token(token)
     except InvalidTokenError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED) from None
     user = await User.get(db, payload.sub)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
@@ -26,6 +26,7 @@ def require_role(role: UserRole):
         if user.role != role:
             raise HTTPException(status.HTTP_403_FORBIDDEN)
         return user
+
     return checker
 
 

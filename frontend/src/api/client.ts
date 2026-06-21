@@ -67,7 +67,9 @@ export const customFetch = async <T>(
     try {
       await refreshOnce();
       res = await doFetch(config, options);
-    } catch {}
+    } catch {
+      // propagate 401
+    }
   }
   if (res.status === 204) return undefined as T;
   if (!res.ok) throw new ApiError(res.status, res.statusText);

@@ -1,10 +1,5 @@
-
-
-
-
-from datetime import datetime, timedelta, timezone
-from typing import Tuple
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, Response, status
 from sqlalchemy import select, update
@@ -24,7 +19,7 @@ async def find_or_create_user(db: AsyncSession, info: GoogleUserInfo) -> User:
         select(AuthIdentity)
         .where(
             AuthIdentity.provider == AuthProvider.GOOGLE,
-            AuthIdentity.provider_account_id == info.sub
+            AuthIdentity.provider_account_id == info.sub,
         )
         .options(selectinload(AuthIdentity.user))
     )
@@ -37,33 +32,31 @@ async def find_or_create_user(db: AsyncSession, info: GoogleUserInfo) -> User:
     if existing:
         if not (existing.is_email_verified and info.email_verified):
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already registered"
+                status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
             )
         user = existing
     else:
         user = User(email=info.email, is_email_verified=info.email_verified)
         db.add(user)
         await db.flush()
-    
+
     new_identity = AuthIdentity(
-        user_id=user.id,
-        provider=AuthProvider.GOOGLE,
-        provider_account_id=info.sub
+        user_id=user.id, provider=AuthProvider.GOOGLE, provider_account_id=info.sub
     )
     db.add(new_identity)
     await db.flush()
     return user
 
 
-async def handle_google_callback(db: AsyncSession, code: str) -> Tuple[str, str]:
+async def handle_google_callback(db: AsyncSession, code: str) -> tuple[str, str]:
     google_token = await exchange_code_for_token(code)
     info = await fetch_google_user(google_token)
     user = await find_or_create_user(db, info)
     access, refresh = await generate_token_pair(db, user.id)
     return access, refresh
 
-async def generate_token_pair(db: AsyncSession, user_id: uuid.UUID) -> Tuple[str, str]:
+
+async def generate_token_pair(db: AsyncSession, user_id: uuid.UUID) -> tuple[str, str]:
     cfg = get_config().jwt
     access = create_access_token(user_id)
     refresh_raw = create_refresh_token()
@@ -73,11 +66,12 @@ async def generate_token_pair(db: AsyncSession, user_id: uuid.UUID) -> Tuple[str
         user_id=user_id,
         token_hash=hashed,
         revoked=False,
-        expires_at=datetime.now(timezone.utc) + timedelta(seconds=cfg.refresh_token_ttl)
+        expires_at=datetime.now(UTC) + timedelta(seconds=cfg.refresh_token_ttl),
     )
     db.add(refresh)
     await db.flush()
     return access, refresh_raw
+
 
 def set_auth_cookies(res: Response, access_token: str, refresh_token: str):
     cfg = get_config().jwt
@@ -98,13 +92,14 @@ def set_auth_cookies(res: Response, access_token: str, refresh_token: str):
         path="/api/auth",
     )
 
+
 async def get_valid_refresh_token(db: AsyncSession, raw_token: str) -> RefreshToken | None:
     hashed = hash_token(raw_token)
     result = await db.execute(select(RefreshToken).where(RefreshToken.token_hash == hashed))
     token = result.scalar_one_or_none()
     if token is None:
         return None
-    if token.revoked or token.expires_at < datetime.now(timezone.utc):
+    if token.revoked or token.expires_at < datetime.now(UTC):
         return None
     return token
 
@@ -113,7 +108,8 @@ async def revoke_refresh_token(db: AsyncSession, token: RefreshToken) -> None:
     token.revoked = True
     await db.flush()
 
+
 async def revoke_all_user_tokens(db: AsyncSession, user_id: uuid.UUID) -> None:
-    await db.execute(update(RefreshToken).where(RefreshToken.user_id == user_id)
-        .values(revoked=True))
-    
+    await db.execute(
+        update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=True)
+    )

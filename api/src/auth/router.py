@@ -17,13 +17,14 @@ from auth.service import (
 )
 from config.middleware import DbSession
 
-
 LOG = get_logger()
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 @router.get("/me", status_code=status.HTTP_200_OK, response_model=UserOut)
 def me(user: CurrentUser):
     return UserOut.model_validate(user)
+
 
 @router.get("/google/login")
 async def google_login():
@@ -32,25 +33,33 @@ async def google_login():
     response.set_cookie("oauth_state", state, httponly=True, max_age=600, samesite="lax")
     return response
 
+
 @router.get("/google/callback")
 async def google_callback(code: str, state: str, req: Request, db: DbSession):
     if not state or not code or state != req.cookies.get("oauth_state"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid callback response")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid callback response"
+        )
     access, refresh = await handle_google_callback(db, code)
 
     res = RedirectResponse("/login")
     set_auth_cookies(res, access, refresh)
     return res
 
+
 @router.post("/refresh", status_code=status.HTTP_204_NO_CONTENT)
 async def refresh(db: DbSession, req: Request):
     raw = req.cookies.get("refresh_token")
     if not raw:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token provided")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="No refresh token provided"
+        )
 
     token = await get_valid_refresh_token(db, raw)
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not valid")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token not valid"
+        )
 
     await revoke_refresh_token(db, token)
     access, new_refresh = await generate_token_pair(db, token.user_id)
@@ -73,10 +82,10 @@ async def logout(req: Request, db: DbSession):
     res.delete_cookie("refresh_token", path="/api/auth")
     return res
 
+
 @router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
 async def logout_all(user: CurrentUser, res: Response, db: DbSession):
     await revoke_all_user_tokens(db, user.id)
     res.delete_cookie("access_token", path="/")
     res.delete_cookie("refresh_token", path="/api/auth")
     return res
-

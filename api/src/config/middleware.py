@@ -2,11 +2,12 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from config.db import get_session_factory
+
 
 # Breaks streaming - be careful here
 class DbSessionMiddleware(BaseHTTPMiddleware):
@@ -23,6 +24,7 @@ class DbSessionMiddleware(BaseHTTPMiddleware):
                 raise
             finally:
                 await session.close()
+
 
 def get_db_session(request: Request) -> AsyncSession:
     return request.state.db

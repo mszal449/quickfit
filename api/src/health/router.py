@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, status
 from structlog import get_logger
 
@@ -9,6 +8,7 @@ LOG = get_logger()
 config = get_config()
 router = APIRouter(tags=["health"])
 
+
 @router.get("/health", status_code=status.HTTP_200_OK, response_model=HealthResponse)
 def health():
-    return HealthResponse(status= "ok")
+    return HealthResponse(status="ok")

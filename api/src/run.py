@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import uvicorn
+
 from config.service import get_config
-from main import create_app
 
 if __name__ == "__main__":
     cfg = get_config()
-    
+
     uvicorn.run(
         app="main:create_app",
         factory=True,

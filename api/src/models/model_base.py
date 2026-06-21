@@ -1,5 +1,5 @@
-from typing import Self
 import uuid
+from typing import Self
 
 from sqlalchemy import UUID
 from sqlalchemy.ext.asyncio import AsyncSession

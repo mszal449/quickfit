@@ -1,5 +1,3 @@
-
-
 from urllib.parse import urlencode
 
 import httpx
@@ -34,8 +32,8 @@ async def exchange_code_for_token(code: str) -> str:
                 "client_id": cfg.google_client_id,
                 "client_secret": cfg.google_client_secret,
                 "redirect_uri": cfg.google_redirect_uri,
-                "grant_type": "authorization_code"
-            }
+                "grant_type": "authorization_code",
+            },
         )
         resp.raise_for_status()
         return resp.json()["access_token"]

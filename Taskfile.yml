@@ -15,6 +15,31 @@ tasks:
     dir: "frontend"
     cmd: npm run dev
 
+  # -------------- LINT / FORMAT --------------
+  lint:
+    desc: "Lint backend (ruff) + frontend (eslint)"
+    deps: [lint:api, lint:frontend]
+
+  lint:api:
+    dir: "api"
+    cmd: uv run ruff check .
+
+  lint:frontend:
+    dir: "frontend"
+    cmd: npm run lint
+
+  format:
+    desc: "Format backend (ruff) + frontend (prettier)"
+    deps: [format:api, format:frontend]
+
+  format:api:
+    dir: "api"
+    cmd: uv run ruff format .
+
+  format:frontend:
+    dir: "frontend"
+    cmd: npx prettier --write .
+
   # -------------- FRONTEND -------------
   gen-api:
     desc: "Generate TanStack Query hooks from backend OpenAPI schema (backend must be running)"

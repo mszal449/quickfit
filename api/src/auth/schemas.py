@@ -1,10 +1,11 @@
+import uuid
 from datetime import datetime
 from typing import Literal
-import uuid
 
 from pydantic import BaseModel, ConfigDict
 
 from models.user import UserRole
+
 
 class AccessToken(BaseModel):
     sub: uuid.UUID
@@ -17,7 +18,7 @@ class AccessToken(BaseModel):
             "sub": str(self.sub),
             "iat": int(self.iat.timestamp()),
             "exp": int(self.exp.timestamp()),
-            "type": self.type
+            "type": self.type,
         }
 
 

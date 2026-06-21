@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePage from "./Pages/HomePage";
+import HomePage from "./pages/HomePage";
 import LoginPage from "./auth/LoginPage";
-import ProtectedRoute from "./auth/protectedRoute";
-import WorkoutsPage from "./Pages/WorkoutsPage";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import WorkoutsPage from "./pages/WorkoutsPage";
 
 function App() {
   return (
