@@ -1,4 +1,3 @@
-import React from "react";
 import { useCurrentUser } from "../auth/useCurrentUser";
 import { useAuth } from "../auth/useAuth";
 import { useListExercisesApiExerciseGet } from "../api/generated/exercise/exercise";
