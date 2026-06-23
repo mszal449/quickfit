@@ -47,6 +47,24 @@ tasks:
     cmd: npx orval
 
   # -------------- BACKEND --------------
+
+  test-unit-backend:
+    desc: "Runs pytest unit tests for backend"
+    dir: "api"
+    cmd: docker compose -f compose.test.yaml run --build --rm unit-tests
+
+  test-integration-backend:
+    desc: "Run backend integration tests against real Postgres in Docker"
+    dir: "api"
+    cmds:
+      - docker compose -f compose.test.yaml down -v
+      - docker compose -f compose.test.yaml run --rm --build integration-tests
+      - docker compose -f compose.test.yaml down -v
+
+  test-backend:
+    desc: "Run unit + integration tests in Docker"
+    deps: [test-unit-backend, test-integration-backend]
+
   add-migration:
     desc: "Creates alembic migration of a given name"
     dir: "api"
@@ -66,7 +84,7 @@ tasks:
   build-local:
     desc: "Build api+frontend images on the host docker and load them into minikube"
     cmds:
-      - docker build -t quickfit-api ./api
+      - docker build -t quickfit-api --target runtime ./api
       - docker build -t quickfit-frontend ./frontend
       - minikube image load quickfit-api
       - minikube image load quickfit-frontend

@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from fastapi import HTTPException, Response, status
+from fastapi import Response
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from auth.google import exchange_code_for_token, fetch_google_user
 from auth.schemas import GoogleUserInfo
 from auth.security import create_access_token, create_refresh_token, hash_token
+from common.exceptions import ConflictError
 from config.service import get_config
 from models.refresh_token import RefreshToken
 from models.user import AuthIdentity, AuthProvider, User
@@ -31,9 +32,7 @@ async def find_or_create_user(db: AsyncSession, info: GoogleUserInfo) -> User:
     existing = res_user.scalar_one_or_none()
     if existing:
         if not (existing.is_email_verified and info.email_verified):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
-            )
+            raise ConflictError("Email already registered")
         user = existing
     else:
         user = User(email=info.email, is_email_verified=info.email_verified)

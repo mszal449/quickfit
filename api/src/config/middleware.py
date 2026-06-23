@@ -17,11 +17,17 @@ class DbSessionMiddleware(BaseHTTPMiddleware):
             request.state.db = session
             try:
                 response = await call_next(request)
-                await session.commit()
-                return response
             except Exception:
                 await session.rollback()
                 raise
+            else:
+                # Exception handlers turn errors into normal responses before
+                # call_next returns, so a failed request must be detected here.
+                if response.status_code >= 400:
+                    await session.rollback()
+                else:
+                    await session.commit()
+                return response
             finally:
                 await session.close()
 

@@ -1,0 +1,36 @@
+services:
+  unit-tests:
+    image: ${API_IMAGE:-quickfit-api:test}
+    build:
+      context: .
+      target: test
+    
+    entrypoint: ["uv", "run", "pytest", "tests/unit"]
+
+  db-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      retries: 10
+    tmpfs: ["/var/lib/postgresql/data"]
+
+  integration-tests:
+    image: ${API_IMAGE:-quickfit-api:test}
+    build:
+      context: .
+      target: test
+    depends_on:
+      db-test:
+        condition: service_healthy
+    environment:
+      DB_URL: postgresql+asyncpg://test:test@db-test:5432/test
+      JWT_SECRET: test_secret
+      GOOGLE_CLIENT_ID: test-client-id
+      GOOGLE_CLIENT_SECRET: test-client-secret
+      GOOGLE_REDIRECT_URI: http://localhost/callback
+    entrypoint: ["uv", "run", "pytest", "tests/integration"]

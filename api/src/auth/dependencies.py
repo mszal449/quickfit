@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
@@ -21,6 +22,17 @@ async def get_current_user(req: Request, db: DbSession) -> User:
     return user
 
 
+async def get_current_user_id(req: Request) -> uuid.UUID:
+    token = req.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    try:
+        payload = decode_access_token(token)
+    except InvalidTokenError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED) from None
+    return payload.sub
+
+
 def require_role(role: UserRole):
     async def checker(user: User = Depends(get_current_user)) -> User:
         if user.role != role:
@@ -31,4 +43,5 @@ def require_role(role: UserRole):
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentUserId = Annotated[uuid.UUID, Depends(get_current_user_id)]
 AdminUser = Annotated[User, Depends(require_role(UserRole.ADMIN))]

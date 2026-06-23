@@ -1,13 +1,25 @@
 export class ApiError extends Error {
   status: number;
   statusText: string;
+  detail: string;
 
-  constructor(status: number, statusText: string) {
+  constructor(status: number, statusText: string, detail: string) {
     super(`${status} ${statusText}`);
     this.name = "ApiError";
     this.status = status;
     this.statusText = statusText;
+    this.detail = detail;
   }
+}
+
+async function parseErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    if (typeof body?.detail === "string") return body.detail;
+  } catch {
+    // body nie był JSON-em — ignoruj
+  }
+  return res.statusText || "Something went wrong";
 }
 
 type RequestConfig = {
@@ -27,7 +39,8 @@ async function runRefresh(): Promise<void> {
     method: "POST",
     credentials: "include",
   });
-  if (!res.ok) throw new ApiError(res.status, res.statusText);
+  if (!res.ok)
+    throw new ApiError(res.status, res.statusText, await parseErrorDetail(res));
 }
 
 function refreshOnce(): Promise<void> {
@@ -72,6 +85,7 @@ export const customFetch = async <T>(
     }
   }
   if (res.status === 204) return undefined as T;
-  if (!res.ok) throw new ApiError(res.status, res.statusText);
+  if (!res.ok)
+    throw new ApiError(res.status, res.statusText, await parseErrorDetail(res));
   return res.json() as Promise<T>;
 };

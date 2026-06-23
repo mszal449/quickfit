@@ -1,5 +1,3 @@
-
-
 import uuid
 from typing import TYPE_CHECKING
 
@@ -21,7 +19,7 @@ class SetLog(BaseModel):
     exercise_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("exercises.id"), index=True)
     set_index: Mapped[int] = mapped_column(Integer, default=0)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
+
     # strength
     reps: Mapped[int | None] = mapped_column(Integer, nullable=True)
     weight: Mapped[float | None] = mapped_column(Float, nullable=True)

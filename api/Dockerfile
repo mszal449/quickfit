@@ -12,7 +12,13 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY . .
 RUN uv sync --frozen --no-dev
 
-FROM python:3.13-slim-bookworm
+FROM builder AS test
+RUN uv sync --frozen --group dev
+COPY tests/ tests/
+ENTRYPOINT [ "uv", "run", "pytest" ]
+
+
+FROM python:3.13-slim-bookworm as runtime
 
 WORKDIR /app
 COPY --from=builder /app /app

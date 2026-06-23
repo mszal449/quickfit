@@ -5,12 +5,39 @@
  * QuickFit API
  * OpenAPI spec version: 0.1.0
  */
+export type ExerciseCreateDescription = string | null;
+
+export interface ExerciseCreate {
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  description?: ExerciseCreateDescription;
+}
+
+export type ExerciseOutDescription = string | null;
+
+export interface ExerciseOut {
+  id: string;
+  owner_id: string;
+  name: string;
+  description: ExerciseOutDescription;
+}
+
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
 
 export interface HealthResponse {
   status: string;
+}
+
+export interface PageExerciseOut {
+  items: ExerciseOut[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export type UserOutLastLoginAt = string | null;
@@ -48,5 +75,17 @@ export interface ValidationError {
 export type GoogleCallbackApiAuthGoogleCallbackGetParams = {
 code: string;
 state: string;
+};
+
+export type ListExercisesApiExerciseGetParams = {
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };
 

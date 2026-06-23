@@ -1,4 +1,3 @@
-
 import enum
 import uuid
 from datetime import UTC, datetime
@@ -13,6 +12,7 @@ from models.model_base import BaseModel
 if TYPE_CHECKING:
     from models.plan import Plan
 
+
 class PlanShareStatus(enum.StrEnum):
     PENDING = "pending"
     ACCEPTED = "accepted"
@@ -24,12 +24,9 @@ class PlanShare(BaseModel):
     __table_args__ = (UniqueConstraint("plan_id", "shared_with_user_id"),)
 
     plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), index=True)
-    shared_with_user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id"), index=True
-    )
+    shared_with_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     status: Mapped[PlanShareStatus] = mapped_column(
-        SAEnum(PlanShareStatus), 
-        default=PlanShareStatus.PENDING
+        SAEnum(PlanShareStatus), default=PlanShareStatus.PENDING
     )
 
     created_at: Mapped[datetime] = mapped_column(
