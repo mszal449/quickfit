@@ -1,6 +1,3 @@
-
-
-
 import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,13 +20,11 @@ class PlanCreate(BaseModel):
     description: str | None
     visibility: PlanVisibility = PlanVisibility.PRIVATE
 
+
 class PlanFilterParams(BaseModel):
     shared_with_me: bool = Field(
-        default=False,
-        description="If True, returns plans shared with the authenticated user"
+        default=False, description="If True, returns plans shared with the authenticated user"
     )
     shared_by_user_id: uuid.UUID | None = Field(
-        default=None,
-        description="Filters plans shared with authenticated user"
+        default=None, description="Filters plans shared with authenticated user"
     )
-

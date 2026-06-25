@@ -23,6 +23,7 @@ async def get_plans(
     plans = await service.list_plans(db, user_id, filters)
     return Page[PlanOut](items=plans, total=len(plans))
 
+
 @router.get("/{plan_id}", response_model=PlanOut)
 async def get_plan(user_id: CurrentUserId, plan_id: UUID, db: DbSession) -> PlanOut:
     return await service.get_plan(db, plan_id, user_id)

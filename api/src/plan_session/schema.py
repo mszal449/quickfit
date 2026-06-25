@@ -1,6 +1,3 @@
-
-
-
 import uuid
 
 from pydantic import BaseModel, ConfigDict
@@ -16,6 +13,7 @@ class PlanSessionOut(BaseModel):
     name: str
     prescription: SessionPrescription
     schema_version: int
+
 
 class PlanSessionCreate(BaseModel):
     name: str

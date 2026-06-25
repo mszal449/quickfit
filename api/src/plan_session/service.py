@@ -1,5 +1,3 @@
-
-
 from uuid import UUID
 
 from sqlalchemy import delete, select
@@ -46,9 +44,7 @@ async def get_plan_session(
 ) -> PlanSessionOut:
     await get_plan(db, plan_id, user_id)
     req = await db.execute(
-        select(PlanSession).where(
-            PlanSession.id == plan_session_id, PlanSession.plan_id == plan_id
-        )
+        select(PlanSession).where(PlanSession.id == plan_session_id, PlanSession.plan_id == plan_id)
     )
     session = req.scalar_one_or_none()
     if session is None:
@@ -62,14 +58,13 @@ async def delete_plan_session(
 ) -> None:
     await get_plan(db, plan_id, user_id)
     result = await db.execute(
-        delete(PlanSession).where(
-            PlanSession.id == plan_session_id, PlanSession.plan_id == plan_id
-        )
+        delete(PlanSession).where(PlanSession.id == plan_session_id, PlanSession.plan_id == plan_id)
     )
     if result.rowcount == 0:  # type: ignore[attr-defined]
         LOG.warning("plan_session_not_found", plan_session_id=str(plan_session_id))
         raise NotFoundError("Plan session not found")
     LOG.info("plan_session_deleted", plan_session_id=str(plan_session_id))
+
 
 async def _exercises_exist(db: AsyncSession, prescription: SessionPrescription):
     ids = {e.exercise_id for e in prescription.exercises}

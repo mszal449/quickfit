@@ -34,7 +34,5 @@ async def create_exercise(
 
 
 @router.delete("/{exercise_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_exercise(
-    user_id: CurrentUserId, exercise_id: uuid.UUID, db: DbSession
-) -> None:
+async def delete_exercise(user_id: CurrentUserId, exercise_id: uuid.UUID, db: DbSession) -> None:
     return await service.delete_user_exercise(db, user_id, exercise_id)

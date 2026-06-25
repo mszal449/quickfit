@@ -21,9 +21,7 @@ class ExercisePrescription(BaseModel):
 
 
 class SessionPrescription(BaseModel):
-    exercises: list[ExercisePrescription] = Field(
-        description="Workout exercises", min_length=1
-    )
+    exercises: list[ExercisePrescription] = Field(description="Workout exercises", min_length=1)
 
     @model_validator(mode="after")
     def _check_unique_exercises(self) -> "SessionPrescription":

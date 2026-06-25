@@ -12,10 +12,11 @@ const WorkoutsPage = () => {
       <h1>Trening</h1>
       <p>Zalogowano jako: {user?.email}</p>
       <button onClick={logout}> Wyloguj</button>
-      {isLoading ?
+      {isLoading ? (
         <div>Loading exercises</div>
-        :
-        <div>{exercises?.items.map((e) => e.name)}</div>}
+      ) : (
+        <div>{exercises?.items.map((e) => e.name)}</div>
+      )}
     </div>
   );
 };

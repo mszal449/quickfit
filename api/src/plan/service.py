@@ -1,5 +1,3 @@
-
-
 from uuid import UUID
 
 from sqlalchemy import delete, exists, or_, select
@@ -15,9 +13,7 @@ LOG = get_logger()
 
 
 # plan/service.py
-async def list_plans(
-    db: AsyncSession, user_id: UUID, filters: PlanFilterParams
-) -> list[PlanOut]:
+async def list_plans(db: AsyncSession, user_id: UUID, filters: PlanFilterParams) -> list[PlanOut]:
     if filters.shared_with_me or filters.shared_by_user_id:
         query = (
             select(Plan)
@@ -54,10 +50,7 @@ async def get_plan(db: AsyncSession, plan_id: UUID, user_id: UUID) -> PlanOut:
 
 async def create_plan(db: AsyncSession, user_id: UUID, plan: PlanCreate) -> PlanOut:
     new_plan = Plan(
-        owner_id=user_id,
-        name=plan.name,
-        description=plan.description,
-        visibility=plan.visibility
+        owner_id=user_id, name=plan.name, description=plan.description, visibility=plan.visibility
     )
     db.add(new_plan)
     await db.flush()
@@ -65,10 +58,9 @@ async def create_plan(db: AsyncSession, user_id: UUID, plan: PlanCreate) -> Plan
     LOG.info("plan_created", plan_id=str(new_plan.id), user_id=str(user_id))
     return PlanOut.model_validate(new_plan)
 
+
 async def delete_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> None:
-    result = await db.execute(
-        delete(Plan).where(Plan.owner_id == user_id, Plan.id == plan_id)
-    )
+    result = await db.execute(delete(Plan).where(Plan.owner_id == user_id, Plan.id == plan_id))
     if result.rowcount == 0:  # type: ignore[attr-defined]
         LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
         raise NotFoundError("Plan not found")
