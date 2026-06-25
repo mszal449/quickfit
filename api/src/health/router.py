@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from structlog import get_logger
 
 from config.service import get_config
-from health.schemas import HealthResponse
+from health.schema import HealthResponse
 
 LOG = get_logger()
 config = get_config()

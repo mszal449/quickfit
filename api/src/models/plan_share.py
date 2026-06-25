@@ -24,6 +24,7 @@ class PlanShare(BaseModel):
     __table_args__ = (UniqueConstraint("plan_id", "shared_with_user_id"),)
 
     plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), index=True)
+    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     shared_with_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     status: Mapped[PlanShareStatus] = mapped_column(
         SAEnum(PlanShareStatus), default=PlanShareStatus.PENDING
