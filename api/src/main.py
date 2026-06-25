@@ -12,6 +12,8 @@ from config.middleware import DbSessionMiddleware
 from config.service import get_config
 from exercise import router as exercise_router
 from health import router as health_router
+from plan import router as plan_router
+from plan_session import router as plan_session_router
 
 LOG = get_logger()
 
@@ -71,5 +73,7 @@ def register_routers(app: FastAPI):
     api_router = APIRouter(prefix="/api")
     api_router.include_router(health_router.router)
     api_router.include_router(auth_router.router)
+    api_router.include_router(plan_router.router)
+    api_router.include_router(plan_session_router.router)
     api_router.include_router(exercise_router.router)
     app.include_router(api_router)

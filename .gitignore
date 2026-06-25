@@ -4,3 +4,4 @@ context
 !.env.example
 !.env.k8s.local.example
 .vscode
+*CLAUDE.md

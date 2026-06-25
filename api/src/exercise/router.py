@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, status
 from structlog import get_logger
 
 from auth.dependencies import CurrentUserId
@@ -14,25 +14,27 @@ router = APIRouter(prefix="/exercise", tags=["exercise"])
 
 
 @router.get("", response_model=Page[ExerciseOut])
-async def list_exercises(
-    db: DbSession,
-    limit: int = Query(default=20, ge=1, le=100),
-    offset: int = Query(default=0, ge=0),
-) -> Page[ExerciseOut]:
-    items, total = await service.list_exercises(db, limit=limit, offset=offset)
-    return Page[ExerciseOut](items=items, total=total, limit=limit, offset=offset)
+async def get_exercises(user_id: CurrentUserId, db: DbSession) -> Page[ExerciseOut]:
+    exercises = await service.list_user_exercises(db, user_id)
+    return Page[ExerciseOut](items=exercises, total=len(exercises))
 
 
 @router.get("/{exercise_id}", response_model=ExerciseOut)
 async def get_exercise(
-    db: DbSession,
-    exercise_id: uuid.UUID,
+    user_id: CurrentUserId, exercise_id: uuid.UUID, db: DbSession
 ) -> ExerciseOut:
     return await service.get_exercise(db, exercise_id)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=ExerciseOut)
 async def create_exercise(
-    db: DbSession, user_id: CurrentUserId, payload: ExerciseCreate
+    user_id: CurrentUserId, payload: ExerciseCreate, db: DbSession
 ) -> ExerciseOut:
-    return await service.create_exercise(db, user_id, payload)
+    return await service.create_user_exercise(db, user_id, payload)
+
+
+@router.delete("/{exercise_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_exercise(
+    user_id: CurrentUserId, exercise_id: uuid.UUID, db: DbSession
+) -> None:
+    return await service.delete_user_exercise(db, user_id, exercise_id)
