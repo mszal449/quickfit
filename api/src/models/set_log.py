@@ -12,7 +12,11 @@ if TYPE_CHECKING:
 
 class SetLog(BaseModel):
     __tablename__ = "set_logs"
-    __table_args__ = (UniqueConstraint("workout_log_id", "exercise_id", "set_index"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "workout_log_id", "exercise_id", "set_index", name="uq_set_logs_log_exercise_index"
+        ),
+    )
 
     workout_log_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("workout_logs.id", ondelete="CASCADE"), index=True
@@ -25,7 +29,6 @@ class SetLog(BaseModel):
     # strength
     reps: Mapped[int | None] = mapped_column(Integer, nullable=True)
     weight: Mapped[float | None] = mapped_column(Float, nullable=True)
-    rpe: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # cardio
     duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)

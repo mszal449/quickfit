@@ -3,6 +3,7 @@ import uuid
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from utils import example_prescription
 
 from auth.dependencies import get_current_user_id
 from models.exercise import Exercise
@@ -10,18 +11,6 @@ from models.plan import Plan
 from models.plan_session import PlanSession
 from models.plan_share import PlanShare, PlanShareStatus
 from models.user import User
-
-
-def _prescription(exercise_id: uuid.UUID) -> dict:
-    return {
-        "exercises": [
-            {
-                "exercise_id": str(exercise_id),
-                "sets": [{"min_reps": 8, "max_reps": 12}],
-                "description": None,
-            }
-        ]
-    }
 
 
 async def test_create_session(client: AsyncClient, db_session: AsyncSession, user: User):
@@ -32,7 +21,7 @@ async def test_create_session(client: AsyncClient, db_session: AsyncSession, use
 
     resp = await client.post(
         f"/api/plan/{plan.id}/session",
-        json={"name": "Day 1", "prescription": _prescription(exercise.id)},
+        json={"name": "Day 1", "prescription": example_prescription(exercise.id)},
     )
 
     assert resp.status_code == 201
@@ -53,7 +42,7 @@ async def test_create_session_unknown_exercise_returns_missing_ids(
     missing_id = uuid.uuid4()
     resp = await client.post(
         f"/api/plan/{plan.id}/session",
-        json={"name": "Day 1", "prescription": _prescription(missing_id)},
+        json={"name": "Day 1", "prescription": example_prescription(missing_id)},
     )
 
     assert resp.status_code == 404
@@ -70,7 +59,7 @@ async def test_create_session_archived_exercise_treated_as_missing(
 
     resp = await client.post(
         f"/api/plan/{plan.id}/session",
-        json={"name": "Day 1", "prescription": _prescription(exercise.id)},
+        json={"name": "Day 1", "prescription": example_prescription(exercise.id)},
     )
 
     assert resp.status_code == 404
@@ -87,7 +76,7 @@ async def test_create_session_for_plan_owned_by_other_user_not_found(
 
     resp = await client.post(
         f"/api/plan/{plan.id}/session",
-        json={"name": "Day 1", "prescription": _prescription(exercise.id)},
+        json={"name": "Day 1", "prescription": example_prescription(exercise.id)},
     )
 
     assert resp.status_code == 404
@@ -101,7 +90,7 @@ async def test_create_session_duplicate_exercise_in_prescription_is_422(
     db_session.add_all([plan, exercise])
     await db_session.flush()
 
-    prescription = _prescription(exercise.id)
+    prescription = example_prescription(exercise.id)
     prescription["exercises"].append(prescription["exercises"][0])
 
     resp = await client.post(
@@ -143,7 +132,9 @@ async def test_get_session(client: AsyncClient, db_session: AsyncSession, user: 
     exercise = Exercise(owner_id=user.id, name="Squat")
     db_session.add_all([plan, exercise])
     await db_session.flush()
-    session = PlanSession(plan_id=plan.id, name="Day 1", prescription=_prescription(exercise.id))
+    session = PlanSession(
+        plan_id=plan.id, name="Day 1", prescription=example_prescription(exercise.id)
+    )
     db_session.add(session)
     await db_session.flush()
 
@@ -161,7 +152,9 @@ async def test_get_session_wrong_plan_not_found(
     exercise = Exercise(owner_id=user.id, name="Squat")
     db_session.add_all([plan, other_plan, exercise])
     await db_session.flush()
-    session = PlanSession(plan_id=plan.id, name="Day 1", prescription=_prescription(exercise.id))
+    session = PlanSession(
+        plan_id=plan.id, name="Day 1", prescription=example_prescription(exercise.id)
+    )
     db_session.add(session)
     await db_session.flush()
 
@@ -176,8 +169,12 @@ async def test_list_sessions(client: AsyncClient, db_session: AsyncSession, user
     await db_session.flush()
     db_session.add_all(
         [
-            PlanSession(plan_id=plan.id, name="Day 1", prescription=_prescription(exercise.id)),
-            PlanSession(plan_id=plan.id, name="Day 2", prescription=_prescription(exercise.id)),
+            PlanSession(
+                plan_id=plan.id, name="Day 1", prescription=example_prescription(exercise.id)
+            ),
+            PlanSession(
+                plan_id=plan.id, name="Day 2", prescription=example_prescription(exercise.id)
+            ),
         ]
     )
     await db_session.flush()
@@ -193,7 +190,9 @@ async def test_delete_session(client: AsyncClient, db_session: AsyncSession, use
     exercise = Exercise(owner_id=user.id, name="Squat")
     db_session.add_all([plan, exercise])
     await db_session.flush()
-    session = PlanSession(plan_id=plan.id, name="Day 1", prescription=_prescription(exercise.id))
+    session = PlanSession(
+        plan_id=plan.id, name="Day 1", prescription=example_prescription(exercise.id)
+    )
     db_session.add(session)
     await db_session.flush()
 
@@ -236,7 +235,7 @@ async def test_shared_user_cannot_create_session_on_someone_elses_plan(
 
     resp = await client.post(
         f"/api/plan/{plan.id}/session",
-        json={"name": "Day 1", "prescription": _prescription(exercise.id)},
+        json={"name": "Day 1", "prescription": example_prescription(exercise.id)},
     )
 
     assert resp.status_code == 404
@@ -249,7 +248,9 @@ async def test_shared_user_can_read_but_not_delete_session(
     exercise = Exercise(owner_id=other_user.id, name="Squat")
     db_session.add_all([plan, exercise])
     await db_session.flush()
-    session = PlanSession(plan_id=plan.id, name="Day 1", prescription=_prescription(exercise.id))
+    session = PlanSession(
+        plan_id=plan.id, name="Day 1", prescription=example_prescription(exercise.id)
+    )
     db_session.add(session)
     db_session.add(
         PlanShare(

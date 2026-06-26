@@ -1,14 +1,15 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
 
 from common.exceptions import NotFoundError
-from models.exercise import Exercise
+from exercise.service import assert_exercises_exist
+from models.plan import Plan
 from models.plan_session import PlanSession
+from models.plan_share import PlanShare, PlanShareStatus
 from plan.service import get_owned_plan, get_plan
-from plan_session.prescription import SessionPrescription
 from plan_session.schema import PlanSessionCreate, PlanSessionOut
 
 LOG = get_logger()
@@ -26,7 +27,7 @@ async def create_plan_session(
     db: AsyncSession, plan_id: UUID, user_id: UUID, payload: PlanSessionCreate
 ) -> PlanSessionOut:
     await get_owned_plan(db, plan_id, user_id)
-    await _exercises_exist(db, payload.prescription)
+    await assert_exercises_exist(db, {e.exercise_id for e in payload.prescription.exercises})
     session = PlanSession(
         plan_id=plan_id,
         name=payload.name,
@@ -53,6 +54,34 @@ async def get_plan_session(
     return PlanSessionOut.model_validate(session)
 
 
+async def get_plan_session_by_id(
+    db: AsyncSession, plan_session_id: UUID, user_id: UUID
+) -> PlanSessionOut:
+    """Like get_plan_session, but resolves the owning plan by joining instead of
+    requiring plan_id from the caller. For consumers that only have a
+    plan_session_id (e.g. workout_log, logging against a shared plan's session)."""
+    shared_with_user = exists().where(
+        PlanShare.plan_id == Plan.id,
+        PlanShare.shared_with_user_id == user_id,
+        PlanShare.status == PlanShareStatus.ACCEPTED,
+    )
+    req = await db.execute(
+        select(PlanSession)
+        .join(Plan, Plan.id == PlanSession.plan_id)
+        .where(
+            PlanSession.id == plan_session_id,
+            or_(Plan.owner_id == user_id, shared_with_user),
+        )
+    )
+    session = req.scalar_one_or_none()
+    if session is None:
+        LOG.warning(
+            "plan_session_not_found", plan_session_id=str(plan_session_id), user_id=str(user_id)
+        )
+        raise NotFoundError("Plan session not found")
+    return PlanSessionOut.model_validate(session)
+
+
 async def delete_plan_session(
     db: AsyncSession, plan_id: UUID, plan_session_id: UUID, user_id: UUID
 ) -> None:
@@ -64,19 +93,3 @@ async def delete_plan_session(
         LOG.warning("plan_session_not_found", plan_session_id=str(plan_session_id))
         raise NotFoundError("Plan session not found")
     LOG.info("plan_session_deleted", plan_session_id=str(plan_session_id))
-
-
-async def _exercises_exist(db: AsyncSession, prescription: SessionPrescription):
-    ids = {e.exercise_id for e in prescription.exercises}
-    res = await db.execute(
-        select(Exercise.id).where(Exercise.id.in_(ids), Exercise.is_archived.is_(False))
-    )
-    found = set(res.scalars().all())
-    missing = ids - found
-    if missing:
-        missing_ids = sorted(str(m) for m in missing)
-        LOG.warning("plan_session_unknown_exercises", missing=missing_ids)
-        raise NotFoundError(
-            "One or more exercises do not exist",
-            extra={"missing_exercise_ids": missing_ids},
-        )

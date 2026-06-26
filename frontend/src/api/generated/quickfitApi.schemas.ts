@@ -5,6 +5,44 @@
  * QuickFit API
  * OpenAPI spec version: 0.1.0
  */
+/**
+ * Repetitions performed
+ */
+export type AddSetRequestReps = number | null;
+
+/**
+ * Weight used, in kg
+ */
+export type AddSetRequestWeight = number | null;
+
+/**
+ * Duration, for cardio
+ */
+export type AddSetRequestDurationSeconds = number | null;
+
+/**
+ * Distance, for cardio
+ */
+export type AddSetRequestDistanceM = number | null;
+
+export type AddSetRequestNotes = string | null;
+
+export interface AddSetRequest {
+  /** Repetitions performed */
+  reps?: AddSetRequestReps;
+  /** Weight used, in kg */
+  weight?: AddSetRequestWeight;
+  /** Duration, for cardio */
+  duration_seconds?: AddSetRequestDurationSeconds;
+  /** Distance, for cardio */
+  distance_m?: AddSetRequestDistanceM;
+  /** Whether the set was completed as logged */
+  completed?: boolean;
+  notes?: AddSetRequestNotes;
+  /** Exercise ID */
+  exercise_id: string;
+}
+
 export type ExerciseCreateDescription = string | null;
 
 export interface ExerciseCreate {
@@ -14,6 +52,16 @@ export interface ExerciseCreate {
    */
   name: string;
   description?: ExerciseCreateDescription;
+}
+
+export interface ExerciseLogEntry {
+  /** Exercise ID */
+  exercise_id: string;
+  /**
+   * Sets logged for this exercise
+   * @minItems 1
+   */
+  sets: SetLogEntry[];
 }
 
 export type ExerciseOutDescription = string | null;
@@ -62,6 +110,11 @@ export interface PagePlanOut {
 
 export interface PagePlanSessionOut {
   items: PlanSessionOut[];
+  total: number;
+}
+
+export interface PageWorkoutLogOut {
+  items: WorkoutLogOut[];
   total: number;
 }
 
@@ -114,13 +167,116 @@ export interface SessionPrescription {
 }
 
 /**
+ * Repetitions performed
+ */
+export type SetLogEntryReps = number | null;
+
+/**
+ * Weight used, in kg
+ */
+export type SetLogEntryWeight = number | null;
+
+/**
+ * Duration, for cardio
+ */
+export type SetLogEntryDurationSeconds = number | null;
+
+/**
+ * Distance, for cardio
+ */
+export type SetLogEntryDistanceM = number | null;
+
+export type SetLogEntryNotes = string | null;
+
+export interface SetLogEntry {
+  /** Repetitions performed */
+  reps?: SetLogEntryReps;
+  /** Weight used, in kg */
+  weight?: SetLogEntryWeight;
+  /** Duration, for cardio */
+  duration_seconds?: SetLogEntryDurationSeconds;
+  /** Distance, for cardio */
+  distance_m?: SetLogEntryDistanceM;
+  /** Whether the set was completed as logged */
+  completed?: boolean;
+  notes?: SetLogEntryNotes;
+}
+
+export type SetLogOutReps = number | null;
+
+export type SetLogOutWeight = number | null;
+
+export type SetLogOutDurationSeconds = number | null;
+
+export type SetLogOutDistanceM = number | null;
+
+export type SetLogOutNotes = string | null;
+
+export interface SetLogOut {
+  id: string;
+  exercise_id: string;
+  set_index: number;
+  reps: SetLogOutReps;
+  weight: SetLogOutWeight;
+  duration_seconds: SetLogOutDurationSeconds;
+  distance_m: SetLogOutDistanceM;
+  completed: boolean;
+  notes: SetLogOutNotes;
+}
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type SetLogUpdateReps = number | null;
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type SetLogUpdateWeight = number | null;
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type SetLogUpdateDurationSeconds = number | null;
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type SetLogUpdateDistanceM = number | null;
+
+/**
+ * Leave unset to keep as-is
+ */
+export type SetLogUpdateCompleted = boolean | null;
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type SetLogUpdateNotes = string | null;
+
+export interface SetLogUpdate {
+  /** Omit to keep as-is; send null to clear */
+  reps?: SetLogUpdateReps;
+  /** Omit to keep as-is; send null to clear */
+  weight?: SetLogUpdateWeight;
+  /** Omit to keep as-is; send null to clear */
+  duration_seconds?: SetLogUpdateDurationSeconds;
+  /** Omit to keep as-is; send null to clear */
+  distance_m?: SetLogUpdateDistanceM;
+  /** Leave unset to keep as-is */
+  completed?: SetLogUpdateCompleted;
+  /** Omit to keep as-is; send null to clear */
+  notes?: SetLogUpdateNotes;
+}
+
+/**
  * Upper bound of the rep range
  */
 export type SetPrescriptionMaxReps = number | null;
 
 export interface SetPrescription {
   /**
-   * Mininum or target rep count
+   * Minimum or target rep count
    * @minimum 0
    */
   min_reps: number;
@@ -160,6 +316,85 @@ export interface ValidationError {
   ctx?: ValidationErrorCtx;
 }
 
+/**
+ * Plan session this workout was performed against, if any
+ */
+export type WorkoutLogCreatePlanSessionId = string | null;
+
+/**
+ * When the workout happened; defaults to now
+ */
+export type WorkoutLogCreatePerformedAt = string | null;
+
+export type WorkoutLogCreateNotes = string | null;
+
+export interface WorkoutLogCreate {
+  /** Plan session this workout was performed against, if any */
+  plan_session_id?: WorkoutLogCreatePlanSessionId;
+  /** When the workout happened; defaults to now */
+  performed_at?: WorkoutLogCreatePerformedAt;
+  notes?: WorkoutLogCreateNotes;
+  /** Sets logged so far. Can be empty — clients may start an in-progress workout and append sets incrementally via POST .../set. */
+  exercises?: ExerciseLogEntry[];
+}
+
+export type WorkoutLogOutPlanId = string | null;
+
+export type WorkoutLogOutPlanSessionId = string | null;
+
+export type WorkoutLogOutNotes = string | null;
+
+export interface WorkoutLogOut {
+  id: string;
+  user_id: string;
+  plan_id: WorkoutLogOutPlanId;
+  plan_session_id: WorkoutLogOutPlanSessionId;
+  status: WorkoutLogStatus;
+  performed_at: string;
+  notes: WorkoutLogOutNotes;
+  sets: SetLogOut[];
+}
+
+export type WorkoutLogStatus = typeof WorkoutLogStatus[keyof typeof WorkoutLogStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const WorkoutLogStatus = {
+  in_progress: 'in_progress',
+  completed: 'completed',
+} as const;
+
+/**
+ * Leave unset to keep as-is
+ */
+export type WorkoutLogUpdatePerformedAt = string | null;
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type WorkoutLogUpdateNotes = string | null;
+
+/**
+ * Leave unset to keep as-is
+ */
+export type WorkoutLogUpdateStatus = WorkoutLogStatus | null;
+
+/**
+ * If provided, fully replaces the workout's logged sets.
+ */
+export type WorkoutLogUpdateExercises = ExerciseLogEntry[] | null;
+
+export interface WorkoutLogUpdate {
+  /** Leave unset to keep as-is */
+  performed_at?: WorkoutLogUpdatePerformedAt;
+  /** Omit to keep as-is; send null to clear */
+  notes?: WorkoutLogUpdateNotes;
+  /** Leave unset to keep as-is */
+  status?: WorkoutLogUpdateStatus;
+  /** If provided, fully replaces the workout's logged sets. */
+  exercises?: WorkoutLogUpdateExercises;
+}
+
 export type GoogleCallbackGetParams = {
 code: string;
 state: string;
@@ -174,5 +409,21 @@ shared_with_me?: boolean;
  * Filters plans shared with authenticated user
  */
 shared_by_user_id?: string | null;
+};
+
+export type GetWorkoutLogsGetParams = {
+/**
+ * Filter by workout log status
+ */
+status?: WorkoutLogStatus | null;
+/**
+ * Filter by plan
+ */
+plan_id?: string | null;
+};
+
+export type GetLastWorkoutLogGetParams = {
+plan_session_id?: string | null;
+plan_id?: string | null;
 };
 

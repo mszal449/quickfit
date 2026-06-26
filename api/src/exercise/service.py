@@ -64,3 +64,20 @@ async def delete_user_exercise(db: AsyncSession, user_id: UUID, exercise_id: UUI
         LOG.warning("exercise_not_found", exercise_id=str(exercise_id), owner_id=str(user_id))
         raise NotFoundError("Exercise not found")
     LOG.info("exercise_deleted", exercise_id=str(exercise_id), owner_id=str(user_id))
+
+
+async def assert_exercises_exist(db: AsyncSession, exercise_ids: set[UUID]) -> None:
+    if not exercise_ids:
+        return
+    res = await db.execute(
+        select(Exercise.id).where(Exercise.id.in_(exercise_ids), Exercise.is_archived.is_(False))
+    )
+    found = set(res.scalars().all())
+    missing = exercise_ids - found
+    if missing:
+        missing_ids = sorted(str(m) for m in missing)
+        LOG.warning("unknown_exercises", missing=missing_ids)
+        raise NotFoundError(
+            "One or more exercises do not exist",
+            extra={"missing_exercise_ids": missing_ids},
+        )

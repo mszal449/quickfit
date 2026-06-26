@@ -1,14 +1,21 @@
+import enum
 import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Text
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.model_base import BaseModel
 
 if TYPE_CHECKING:
     from models.set_log import SetLog
+
+
+class WorkoutLogStatus(enum.StrEnum):
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
 
 
 class WorkoutLog(BaseModel):
@@ -20,6 +27,9 @@ class WorkoutLog(BaseModel):
     )
     plan_session_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("plan_sessions.id", ondelete="SET NULL"), index=True, nullable=True
+    )
+    status: Mapped[WorkoutLogStatus] = mapped_column(
+        SAEnum(WorkoutLogStatus), default=WorkoutLogStatus.IN_PROGRESS, index=True
     )
     performed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
