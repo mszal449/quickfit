@@ -5,8 +5,52 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from structlog import get_logger
 
 from config.db import get_session_factory
+
+LOG = get_logger()
+
+
+class RequestLoggingMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        chunks: list[Message] = []
+        body = b""
+        more_body = True
+        while more_body:
+            message = await receive()
+            chunks.append(message)
+            body += message.get("body", b"")
+            more_body = message.get("more_body", False)
+
+        LOG.info(
+            "http_request",
+            method=scope["method"],
+            path=scope["path"],
+            query=scope.get("query_string", b"").decode("latin-1"),
+            content_type=_header(scope, b"content-type"),
+            body=body.decode("utf-8", "replace"),
+        )
+
+        async def replay() -> Message:
+            return chunks.pop(0) if chunks else {"type": "http.request", "body": b""}
+
+        await self.app(scope, replay, send)
+
+
+def _header(scope: Scope, name: bytes) -> str | None:
+    for key, value in scope.get("headers", []):
+        if key == name:
+            return value.decode("latin-1")
+    return None
 
 
 # Breaks streaming - be careful here

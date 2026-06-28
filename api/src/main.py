@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI, Request, status
@@ -9,7 +10,7 @@ from structlog import get_logger
 from auth import router as auth_router
 from common.exceptions import AppError, ConflictError, ForbiddenError, NotFoundError
 from config.db import close_db, init_db
-from config.middleware import DbSessionMiddleware
+from config.middleware import DbSessionMiddleware, RequestLoggingMiddleware
 from config.service import get_config
 from exercise import router as exercise_router
 from health import router as health_router
@@ -21,9 +22,6 @@ LOG = get_logger()
 
 
 def custom_operation_id(route: APIRoute) -> str:
-    # OpenAPI operationId = "<handler_name>_<method>" so the generated frontend
-    # client gets hook names like useGetPlansGet / useCreateSessionPost instead
-    # of the default path-mangled mess. Handler names must be unique per method.
     methods = (route.methods or set()) - {"HEAD", "OPTIONS"}
     method = sorted(methods)[0].lower() if methods else "get"
     return f"{route.name}_{method}"
@@ -59,6 +57,11 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     )
 
 
+def log_info(req_body, res_body):
+    logging.info("BODY:", req_body)
+    logging.info(res_body)
+
+
 def create_app():
     cfg = get_config()
     app = FastAPI(
@@ -81,12 +84,19 @@ def create_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(RequestLoggingMiddleware)
     register_routers(app)
     return app
 
 
 def register_routers(app: FastAPI):
     api_router = APIRouter(prefix="/api")
+
+    @api_router.post("/debug")
+    async def debug(request: Request):
+        print(await request.body())
+        print(await request.json())
+
     api_router.include_router(health_router.router)
     api_router.include_router(auth_router.router)
     api_router.include_router(plan_router.router)

@@ -1,20 +1,36 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import HomePage from "./pages/HomePage";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AppLayout } from "./components/layout/AppLayout";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { PlansPage } from "./features/plans/PlansPage";
+import { PlanBuilderPage } from "./features/plans/PlanBuilderPage";
+import { ExercisesPage } from "./features/exercises/ExercisesPage";
+import { HistoryPage } from "./features/history/HistoryPage";
+import { LiveSessionPage } from "./features/session/LiveSessionPage";
+import { LandingPage } from "./features/landing/LandingPage";
+import { AccountPage } from "./features/account/AccountPage";
 import LoginPage from "./auth/LoginPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
-import WorkoutsPage from "./pages/WorkoutsPage";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/workouts" element={<WorkoutsPage />} />
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/plans" element={<PlansPage />} />
+            <Route path="/plans/:planId" element={<PlanBuilderPage />} />
+            <Route path="/exercises" element={<ExercisesPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/account" element={<AccountPage />} />
+          </Route>
+
+          <Route path="/session/:sessionId" element={<LiveSessionPage />} />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

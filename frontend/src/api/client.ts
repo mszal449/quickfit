@@ -12,14 +12,31 @@ export class ApiError extends Error {
   }
 }
 
+interface ValidationItem {
+  loc?: (string | number)[];
+  msg?: string;
+}
+
 async function parseErrorDetail(res: Response): Promise<string> {
   try {
     const body = await res.json();
     if (typeof body?.detail === "string") return body.detail;
+    if (Array.isArray(body?.detail)) {
+      return (body.detail as ValidationItem[])
+        .map((d) => {
+          const field = d.loc?.[d.loc.length - 1] ?? "field";
+          return `${field}: ${d.msg ?? "invalid"}`;
+        })
+        .join("; ");
+    }
   } catch {
     // body nie był JSON-em — ignoruj
   }
   return res.statusText || "Something went wrong";
+}
+
+export function getErrorMessage(e: unknown): string {
+  return e instanceof ApiError ? e.detail : "Something went wrong";
 }
 
 type RequestConfig = {
@@ -65,8 +82,13 @@ async function doFetch(
     method,
     signal,
     credentials: "include",
-    headers: { "Content-type": "application/json", ...headers },
-    body: data ? JSON.stringify(data) : undefined,
+    headers: { ...headers },
+    body:
+      data == null
+        ? undefined
+        : typeof data === "string"
+          ? data
+          : JSON.stringify(data),
   });
 }
 

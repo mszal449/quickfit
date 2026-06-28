@@ -15,7 +15,11 @@ def _check_unique_exercises(exercises: list["ExerciseLogEntry"]) -> list["Exerci
 
 class SetLogEntry(BaseModel):
     reps: int | None = Field(default=None, ge=0, description="Repetitions performed")
-    weight: float | None = Field(default=None, gt=0, description="Weight used, in kg")
+    weight: float | None = Field(
+        default=None,
+        description="Weight used, in kg. Negative values represent assistance "
+        "(e.g. a resistance band reducing effective bodyweight).",
+    )
     duration_seconds: int | None = Field(default=None, gt=0, description="Duration, for cardio")
     distance_m: float | None = Field(default=None, gt=0, description="Distance, for cardio")
     completed: bool = Field(default=True, description="Whether the set was completed as logged")
@@ -37,7 +41,9 @@ class SetLogUpdate(BaseModel):
         default=None, ge=0, description="Omit to keep as-is; send null to clear"
     )
     weight: float | None = Field(
-        default=None, gt=0, description="Omit to keep as-is; send null to clear"
+        default=None,
+        description="Weight used, in kg (negative = assisted). Omit to keep as-is; "
+        "send null to clear",
     )
     duration_seconds: int | None = Field(
         default=None, gt=0, description="Omit to keep as-is; send null to clear"
