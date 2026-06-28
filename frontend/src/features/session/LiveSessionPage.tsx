@@ -13,6 +13,7 @@ import { SetsTable } from "./components/SetsTable";
 import { LogSetWidget } from "./components/LogSetWidget";
 import { UpNextBar } from "./components/UpNextBar";
 import { RestTimerBar } from "./components/RestTimerBar";
+import { buildSummary } from "./buildSummary";
 import type { LiveExercise, LiveSetRow } from "./types";
 
 function isExerciseDone(ex: LiveExercise): boolean {
@@ -170,8 +171,9 @@ export function LiveSessionPage() {
   };
 
   const handleFinish = () => {
+    const summary = buildSummary(model, elapsed);
     finish(workoutLogId)
-      .then(() => navigate("/dashboard"))
+      .then(() => navigate(`/session/${workoutLogId}/summary`, { state: { summary } }))
       .catch(() => {});
   };
 

@@ -6,6 +6,7 @@ import { PlanBuilderPage } from "./features/plans/PlanBuilderPage";
 import { ExercisesPage } from "./features/exercises/ExercisesPage";
 import { HistoryPage } from "./features/history/HistoryPage";
 import { LiveSessionPage } from "./features/session/LiveSessionPage";
+import { WorkoutSummaryPage } from "./features/session/WorkoutSummaryPage";
 import { LandingPage } from "./features/landing/LandingPage";
 import { AccountPage } from "./features/account/AccountPage";
 import LoginPage from "./auth/LoginPage";
@@ -29,6 +30,7 @@ function App() {
           </Route>
 
           <Route path="/session/:sessionId" element={<LiveSessionPage />} />
+          <Route path="/session/:sessionId/summary" element={<WorkoutSummaryPage />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
