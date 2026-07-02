@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { Logo } from "../Logo";
-import { LogoutIcon, UserIcon } from "../icons";
+import { LogoutIcon, UserIcon, UsersIcon } from "../icons";
 import { Menu } from "../ui/Menu";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { useAuth } from "../../auth/useAuth";
@@ -42,6 +42,11 @@ function MobileTopBar() {
         triggerClassName="h-8 w-8 rounded-full"
         trigger={<UserIcon size={18} />}
         items={[
+          {
+            label: "Friends",
+            icon: <UsersIcon size={16} />,
+            onSelect: () => navigate("/friends"),
+          },
           {
             label: "Account",
             icon: <UserIcon size={16} />,

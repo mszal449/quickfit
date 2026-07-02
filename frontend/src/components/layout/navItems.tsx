@@ -5,6 +5,7 @@ import {
   HistoryIcon,
   PlansIcon,
   ProgressIcon,
+  UsersIcon,
 } from "../icons";
 
 export interface NavItem {
@@ -22,6 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/plans", label: "Plans", icon: PlansIcon },
   { to: "/exercises", label: "Exercises", icon: DumbbellIcon },
   { to: "/history", label: "History", icon: HistoryIcon },
+  { to: "/friends", label: "Friends", icon: UsersIcon, desktopOnly: true },
   {
     to: "/progress",
     label: "Progress",

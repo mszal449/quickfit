@@ -13,6 +13,7 @@ from config.db import close_db, init_db
 from config.middleware import DbSessionMiddleware, RequestLoggingMiddleware
 from config.service import get_config
 from exercise import router as exercise_router
+from friend import router as friend_router
 from health import router as health_router
 from plan import router as plan_router
 from plan_session import router as plan_session_router
@@ -103,4 +104,5 @@ def register_routers(app: FastAPI):
     api_router.include_router(plan_session_router.router)
     api_router.include_router(exercise_router.router)
     api_router.include_router(workout_log_router.router)
+    api_router.include_router(friend_router.router)
     app.include_router(api_router)

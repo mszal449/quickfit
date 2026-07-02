@@ -6,6 +6,7 @@ import { PlanBuilderPage } from "./features/plans/PlanBuilderPage";
 import { ExercisesPage } from "./features/exercises/ExercisesPage";
 import { ExerciseDetailPage } from "./features/exercises/ExerciseDetailPage";
 import { HistoryPage } from "./features/history/HistoryPage";
+import { FriendsPage } from "./features/friends/FriendsPage";
 import { LiveSessionPage } from "./features/session/LiveSessionPage";
 import { WorkoutSummaryPage } from "./features/session/WorkoutSummaryPage";
 import { LandingPage } from "./features/landing/LandingPage";
@@ -26,13 +27,20 @@ function App() {
             <Route path="/plans" element={<PlansPage />} />
             <Route path="/plans/:planId" element={<PlanBuilderPage />} />
             <Route path="/exercises" element={<ExercisesPage />} />
-            <Route path="/exercises/:exerciseId" element={<ExerciseDetailPage />} />
+            <Route
+              path="/exercises/:exerciseId"
+              element={<ExerciseDetailPage />}
+            />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/friends" element={<FriendsPage />} />
             <Route path="/account" element={<AccountPage />} />
           </Route>
 
           <Route path="/session/:sessionId" element={<LiveSessionPage />} />
-          <Route path="/session/:sessionId/summary" element={<WorkoutSummaryPage />} />
+          <Route
+            path="/session/:sessionId/summary"
+            element={<WorkoutSummaryPage />}
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

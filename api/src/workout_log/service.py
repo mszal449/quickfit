@@ -254,7 +254,11 @@ async def remove_set(db: AsyncSession, user_id: UUID, workout_log_id: UUID, set_
         .where(SetLog.workout_log_id == workout_log_id, SetLog.exercise_id == exercise_id)
         .order_by(SetLog.set_index)
     )
-    for index, set_log in enumerate(remaining.scalars().all()):
+    remaining_sets = remaining.scalars().all()
+    for offset_index, set_log in enumerate(remaining_sets):
+        set_log.set_index = len(remaining_sets) + offset_index
+    await db.flush()
+    for index, set_log in enumerate(remaining_sets):
         set_log.set_index = index
     await db.flush()
     LOG.info("set_log_removed", workout_log_id=str(workout_log_id), set_id=str(set_id))

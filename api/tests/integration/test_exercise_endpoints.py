@@ -10,7 +10,10 @@ from models.user import User
 
 
 async def test_create_exercise(client: AsyncClient, user: User):
-    resp = await client.post("/api/exercise", json={"name": "Squat", "description": "Back squat"})
+    resp = await client.post(
+        "/api/exercise",
+        json={"name": "Squat", "description": "Back squat", "muscle_group": "quads"},
+    )
 
     assert resp.status_code == 201
     body = resp.json()
@@ -21,7 +24,7 @@ async def test_create_exercise(client: AsyncClient, user: User):
 
 
 async def test_create_exercise_duplicate_name_conflict(client: AsyncClient):
-    payload = {"name": "Deadlift", "description": None}
+    payload = {"name": "Deadlift", "description": None, "muscle_group": "back"}
 
     first = await client.post("/api/exercise", json=payload)
     assert first.status_code == 201
@@ -34,7 +37,7 @@ async def test_create_exercise_duplicate_name_conflict(client: AsyncClient):
 async def test_create_exercise_same_name_different_owner_ok(
     client: AsyncClient, app: FastAPI, other_user: User
 ):
-    payload = {"name": "Bench Press", "description": None}
+    payload = {"name": "Bench Press", "description": None, "muscle_group": "chest"}
 
     first = await client.post("/api/exercise", json=payload)
     assert first.status_code == 201
@@ -136,7 +139,7 @@ async def test_delete_other_users_exercise_not_found(
 
 
 async def test_delete_then_recreate_same_name_succeeds(client: AsyncClient):
-    payload = {"name": "Pull-up", "description": None}
+    payload = {"name": "Pull-up", "description": None, "muscle_group": "back"}
 
     created = await client.post("/api/exercise", json=payload)
     exercise_id = created.json()["id"]

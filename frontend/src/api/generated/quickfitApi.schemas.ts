@@ -138,6 +138,35 @@ export interface ExerciseUpdate {
   muscle_group?: ExerciseUpdateMuscleGroup;
 }
 
+export interface FriendRequestCreate {
+  /** Email of the user to send a friend request to */
+  email: string;
+}
+
+export interface FriendUserOut {
+  id: string;
+  email: string;
+}
+
+export interface FriendshipOut {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: FriendshipStatus;
+  created_at: string;
+  /** The other party in this friendship */
+  user: FriendUserOut;
+}
+
+export type FriendshipStatus = typeof FriendshipStatus[keyof typeof FriendshipStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FriendshipStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+} as const;
+
 export interface HTTPValidationError {
   detail?: ValidationError[];
 }
@@ -167,6 +196,11 @@ export const MuscleGroup = {
 
 export interface PageExerciseOut {
   items: ExerciseOut[];
+  total: number;
+}
+
+export interface PageFriendshipOut {
+  items: FriendshipOut[];
   total: number;
 }
 
@@ -534,5 +568,12 @@ plan_id?: string | null;
 export type GetLastWorkoutLogGetParams = {
 plan_session_id?: string | null;
 plan_id?: string | null;
+};
+
+export type GetFriendshipsGetParams = {
+/**
+ * Filter by status
+ */
+status?: FriendshipStatus | null;
 };
 

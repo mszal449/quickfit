@@ -1,4 +1,5 @@
 from models.exercise import Exercise  # noqa: F401
+from models.friendship import Friendship  # noqa: F401
 from models.plan import Plan  # noqa: F401
 from models.plan_session import PlanSession  # noqa: F401
 from models.plan_share import PlanShare  # noqa: F401
