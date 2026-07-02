@@ -49,9 +49,7 @@ async def _get_related_friendship(
     )
     friendship = req.scalar_one_or_none()
     if friendship is None:
-        LOG.warning(
-            "friendship_not_found", friendship_id=str(friendship_id), user_id=str(user_id)
-        )
+        LOG.warning("friendship_not_found", friendship_id=str(friendship_id), user_id=str(user_id))
         raise NotFoundError("Friendship not found")
     return friendship
 

@@ -17,9 +17,7 @@ class FriendshipStatus(enum.StrEnum):
 class Friendship(BaseModel):
     __tablename__ = "friendships"
     __table_args__ = (
-        UniqueConstraint(
-            "requester_id", "addressee_id", name="uq_friendships_requester_addressee"
-        ),
+        UniqueConstraint("requester_id", "addressee_id", name="uq_friendships_requester_addressee"),
         CheckConstraint("requester_id != addressee_id", name="ck_friendships_no_self_friend"),
     )
 

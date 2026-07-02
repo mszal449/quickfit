@@ -28,9 +28,7 @@ class PlanUpdate(BaseModel):
     description: str | None = Field(
         default=None, description="Omit to keep as-is; send null to clear"
     )
-    visibility: PlanVisibility | None = Field(
-        default=None, description="Leave unset to keep as-is"
-    )
+    visibility: PlanVisibility | None = Field(default=None, description="Leave unset to keep as-is")
 
 
 class PlanFilterParams(BaseModel):
