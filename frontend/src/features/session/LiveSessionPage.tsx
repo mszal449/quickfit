@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Tag } from "../../components/ui/Tag";
 import { Button } from "../../components/ui/Button";
+import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { formatReps, formatWeight } from "../../lib/format";
 import { useLiveSession } from "./useLiveSession";
 import { useSetMutations } from "./useSetMutations";
@@ -51,6 +52,7 @@ export function LiveSessionPage() {
 
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
+  const [confirmFinish, setConfirmFinish] = useState(false);
   const elapsed = useElapsedSeconds(model?.performed_at);
 
   const exerciseCount = model?.exercises.length ?? 0;
@@ -170,7 +172,7 @@ export function LiveSessionPage() {
     setEditingSetId(row.set_log_id);
   };
 
-  const handleFinish = () => {
+  const confirmFinishWorkout = () => {
     const summary = buildSummary(model, elapsed);
     finish(workoutLogId)
       .then(() => navigate(`/session/${workoutLogId}/summary`, { state: { summary } }))
@@ -186,7 +188,7 @@ export function LiveSessionPage() {
         currentExerciseIndex={safeIndex}
         incompleteIndices={incompleteIndices}
         onBack={() => navigate("/dashboard")}
-        onFinish={handleFinish}
+        onFinish={() => setConfirmFinish(true)}
         onSelectExercise={goToExercise}
       />
 
@@ -279,6 +281,19 @@ export function LiveSessionPage() {
           </button>
         </div>
       </main>
+
+      <ConfirmDialog
+        open={confirmFinish}
+        title="Finish this workout?"
+        description={
+          incompleteIndices.length > 0
+            ? "Some exercises still have sets left to log. You can still finish now."
+            : "You won't be able to log any more sets after this."
+        }
+        confirmLabel="Finish"
+        onConfirm={confirmFinishWorkout}
+        onClose={() => setConfirmFinish(false)}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../components/ui/Button";
@@ -6,17 +6,22 @@ import { Card, Eyebrow } from "../../components/ui/Card";
 import { SegmentedTabs } from "../../components/ui/SegmentedTabs";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
-import { ChevronLeftIcon, PlusIcon } from "../../components/icons";
+import { Menu } from "../../components/ui/Menu";
+import { ChevronLeftIcon, PlusIcon, PencilIcon, MoreIcon, CloseIcon } from "../../components/icons";
 import { useToast } from "../../components/ui/useToast";
 import { getErrorMessage } from "../../api/client";
-import { useGetPlanGet } from "../../api/generated/plan/plan";
+import { useGetPlanGet, useUpdatePlanPatch, getGetPlanGetQueryKey } from "../../api/generated/plan/plan";
 import {
   useGetSessionsGet,
   useCreateSessionPost,
+  useUpdateSessionPatch,
+  useDeleteSessionDelete,
   getGetSessionsGetQueryKey,
 } from "../../api/generated/plan-session/plan-session";
 import { SessionDraftEditor } from "./builder/SessionDraftEditor";
 import { CreateSessionModal } from "./CreateSessionModal";
+import { RenameSessionModal } from "./RenameSessionModal";
+import { PlanFormModal, type PlanFormValues } from "./PlanFormModal";
 import { ExercisePickerModal } from "./builder/ExercisePickerModal";
 import { newDraftExercise, toPrescription } from "./builder/prescriptionDraft";
 
@@ -32,11 +37,40 @@ export function PlanBuilderPage() {
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [namingSession, setNamingSession] = useState(false);
   const [newSessionName, setNewSessionName] = useState<string | null>(null);
+  const [editingPlan, setEditingPlan] = useState(false);
+  const [renamingSession, setRenamingSession] = useState(false);
+  const [deletingSession, setDeletingSession] = useState(false);
 
   const activeSession = sessions.find((s) => s.id === activeId) ?? sessions[0] ?? null;
+
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  const guardedNavigate = (action: () => void) => {
+    if (dirty) setPendingAction(() => action);
+    else action();
+  };
+
+  const updatePlan = useUpdatePlanPatch({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Plan updated");
+        queryClient.invalidateQueries({ queryKey: getGetPlanGetQueryKey(planId) });
+        setEditingPlan(false);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    },
+  });
 
   const createSession = useCreateSessionPost({
     mutation: {
@@ -44,6 +78,29 @@ export function PlanBuilderPage() {
         queryClient.invalidateQueries({ queryKey: getGetSessionsGetQueryKey(planId) });
         setNewSessionName(null);
         setActiveId(session.id);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    },
+  });
+
+  const renameSession = useUpdateSessionPatch({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Session renamed");
+        queryClient.invalidateQueries({ queryKey: getGetSessionsGetQueryKey(planId) });
+        setRenamingSession(false);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    },
+  });
+
+  const deleteSession = useDeleteSessionDelete({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Session deleted");
+        queryClient.invalidateQueries({ queryKey: getGetSessionsGetQueryKey(planId) });
+        setActiveId(null);
+        setDeletingSession(false);
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     },
@@ -62,9 +119,10 @@ export function PlanBuilderPage() {
 
   const selectSession = (id: string) => {
     if (id === activeSession?.id) return;
-    if (dirty) setPendingId(id);
-    else setActiveId(id);
+    guardedNavigate(() => setActiveId(id));
   };
+
+  const goBack = () => guardedNavigate(() => navigate("/plans"));
 
   if (planLoading || sessionsLoading) {
     return (
@@ -92,16 +150,28 @@ export function PlanBuilderPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <button
-        onClick={() => navigate("/plans")}
+        onClick={goBack}
         className="text-muted hover:text-fg mb-3 flex cursor-pointer items-center gap-1 text-sm font-medium"
       >
         <ChevronLeftIcon size={18} /> Plans
       </button>
 
-      <div className="mb-5">
-        <Eyebrow className="mb-1 block">Edit plan</Eyebrow>
-        <h1 className="font-display text-fg text-3xl font-bold tracking-tight">{plan.name}</h1>
-        {plan.description && <p className="text-faint mt-1 text-sm">{plan.description}</p>}
+      <div className="mb-5 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <Eyebrow className="mb-1 block">Edit plan</Eyebrow>
+          <h1 className="font-display text-fg truncate text-3xl font-bold tracking-tight">
+            {plan.name}
+          </h1>
+          {plan.description && <p className="text-faint mt-1 text-sm">{plan.description}</p>}
+        </div>
+        <button
+          type="button"
+          aria-label="Edit plan details"
+          onClick={() => setEditingPlan(true)}
+          className="text-faint hover:text-fg flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg"
+        >
+          <PencilIcon size={18} />
+        </button>
       </div>
 
       {sessions.length === 0 ? (
@@ -119,6 +189,24 @@ export function PlanBuilderPage() {
               tabs={sessions.map((s) => ({ id: s.id, label: s.name }))}
               active={activeSession!.id}
               onChange={selectSession}
+            />
+            <Menu
+              triggerClassName="border-border bg-surface-2 text-muted hover:text-fg flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border"
+              label="Session actions"
+              trigger={<MoreIcon size={18} />}
+              items={[
+                {
+                  label: "Rename session",
+                  icon: <PencilIcon size={16} />,
+                  onSelect: () => setRenamingSession(true),
+                },
+                {
+                  label: "Delete session",
+                  icon: <CloseIcon size={16} />,
+                  destructive: true,
+                  onSelect: () => setDeletingSession(true),
+                },
+              ]}
             />
             <button
               type="button"
@@ -140,16 +228,50 @@ export function PlanBuilderPage() {
       )}
 
       <ConfirmDialog
-        open={pendingId !== null}
+        open={pendingAction !== null}
         title="Discard unsaved changes?"
-        description="You have unsaved edits to this session. Switching will lose them."
+        description="You have unsaved edits to this session. Leaving will lose them."
         confirmLabel="Discard"
         destructive
         onConfirm={() => {
-          if (pendingId) setActiveId(pendingId);
-          setPendingId(null);
+          pendingAction?.();
+          setPendingAction(null);
         }}
-        onClose={() => setPendingId(null)}
+        onClose={() => setPendingAction(null)}
+      />
+
+      <PlanFormModal
+        key={editingPlan ? "plan-edit-open" : "plan-edit-closed"}
+        open={editingPlan}
+        plan={plan}
+        onClose={() => setEditingPlan(false)}
+        onSubmit={(values: PlanFormValues) => updatePlan.mutate({ planId, data: values })}
+        isSubmitting={updatePlan.isPending}
+      />
+
+      {activeSession && (
+        <RenameSessionModal
+          key={renamingSession ? `rename-open-${activeSession.id}` : "rename-closed"}
+          open={renamingSession}
+          initialName={activeSession.name}
+          onClose={() => setRenamingSession(false)}
+          onSubmit={(name) =>
+            renameSession.mutate({ planId, planSessionId: activeSession.id, data: { name } })
+          }
+          isSubmitting={renameSession.isPending}
+        />
+      )}
+
+      <ConfirmDialog
+        open={deletingSession}
+        title={`Delete "${activeSession?.name}"?`}
+        description="This permanently removes the session and its prescription. Past workout logs are kept."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={() =>
+          activeSession && deleteSession.mutate({ planId, planSessionId: activeSession.id })
+        }
+        onClose={() => setDeletingSession(false)}
       />
 
       <CreateSessionModal

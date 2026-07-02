@@ -8,7 +8,7 @@ from auth.dependencies import CurrentUserId
 from common.schema import Page
 from config.middleware import DbSession
 from plan import service
-from plan.schema import PlanCreate, PlanFilterParams, PlanOut
+from plan.schema import PlanCreate, PlanFilterParams, PlanOut, PlanUpdate
 
 LOG = get_logger()
 router = APIRouter(prefix="/plan", tags=["plan"])
@@ -32,6 +32,13 @@ async def get_plan(user_id: CurrentUserId, plan_id: UUID, db: DbSession) -> Plan
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=PlanOut)
 async def create_plan(user_id: CurrentUserId, payload: PlanCreate, db: DbSession) -> PlanOut:
     return await service.create_plan(db, user_id, payload)
+
+
+@router.patch("/{plan_id}", response_model=PlanOut)
+async def update_plan(
+    user_id: CurrentUserId, plan_id: UUID, payload: PlanUpdate, db: DbSession
+) -> PlanOut:
+    return await service.update_plan(db, user_id, plan_id, payload)
 
 
 @router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)

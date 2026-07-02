@@ -23,6 +23,16 @@ class PlanCreate(BaseModel):
     visibility: PlanVisibility = PlanVisibility.PRIVATE
 
 
+class PlanUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, description="Leave unset to keep as-is")
+    description: str | None = Field(
+        default=None, description="Omit to keep as-is; send null to clear"
+    )
+    visibility: PlanVisibility | None = Field(
+        default=None, description="Leave unset to keep as-is"
+    )
+
+
 class PlanFilterParams(BaseModel):
     shared_with_me: bool = Field(
         default=False, description="If True, returns plans shared with the authenticated user"

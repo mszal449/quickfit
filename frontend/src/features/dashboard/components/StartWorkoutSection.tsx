@@ -6,7 +6,7 @@ import type { PlanStartGroup } from "../startOptions";
 
 interface StartWorkoutSectionProps {
   groups: PlanStartGroup[];
-  onStart: (planId: string, sessionId: string) => void;
+  onStart: (planId: string, sessionId: string, sessionName: string) => void;
   heading?: string;
 }
 
@@ -44,7 +44,7 @@ export function StartWorkoutSection({
           <SessionStartCard
             key={option.session_id}
             option={option}
-            onStart={() => onStart(option.plan_id, option.session_id)}
+            onStart={() => onStart(option.plan_id, option.session_id, option.session_name)}
           />
         ))}
       </div>

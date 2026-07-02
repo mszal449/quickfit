@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -161,12 +162,17 @@ export function ExercisesPage() {
               key={ex.id}
               className="hover:bg-surface-2 flex items-center gap-3 px-4 py-3 transition-colors"
             >
-              <div className="min-w-0 flex-1">
-                <div className="text-fg truncate font-semibold">{ex.name}</div>
+              <Link
+                to={`/exercises/${ex.id}`}
+                className="group min-w-0 flex-1 focus:outline-none"
+              >
+                <div className="text-fg group-hover:text-primary truncate font-semibold transition-colors">
+                  {ex.name}
+                </div>
                 {ex.description && (
                   <div className="text-faint truncate text-sm">{ex.description}</div>
                 )}
-              </div>
+              </Link>
               <Tag tone={ex.category === ExerciseCategory.cardio ? "primary" : "muted"}>
                 {ex.muscle_group ? MUSCLE_GROUP_LABELS[ex.muscle_group] : "Cardio"}
               </Tag>

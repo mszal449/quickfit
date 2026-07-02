@@ -1,28 +1,13 @@
 import { Card } from "../../../components/ui/Card";
-import type { DashboardData } from "../../../mocks/types";
+import type { DashboardStats } from "../aggregateStats";
 import { formatTonnes } from "../../../lib/format";
 
-type Stats = DashboardData["stats"];
-
-export function StatsStrip({ stats }: { stats: Stats }) {
+export function StatsStrip({ stats }: { stats: DashboardStats }) {
   const items = [
-    {
-      value: formatTonnes(stats.volume_week_kg),
-      unit: "t",
-      label: "Volume / wk",
-    },
-    {
-      value: `${stats.sessions_done}/${stats.sessions_planned}`,
-      unit: "",
-      label: "Sessions",
-    },
-    {
-      value: String(stats.streak_days),
-      unit: "d",
-      label: "Streak",
-      accent: true,
-    },
-    { value: String(stats.prs_this_month), unit: "", label: "PRs / mo" },
+    { value: formatTonnes(stats.volume_week_kg), unit: "t", label: "Volume / wk" },
+    { value: String(stats.sessions_week), unit: "", label: "Sessions / wk" },
+    { value: String(stats.streak_weeks), unit: "wk", label: "Streak", accent: true },
+    { value: String(stats.prs_this_month), unit: "", label: "PRs / 30d" },
   ];
 
   return (
@@ -37,9 +22,7 @@ export function StatsStrip({ stats }: { stats: Stats }) {
                 {it.value}
               </span>
               {it.unit && (
-                <span className="text-faint text-xs font-medium">
-                  {it.unit}
-                </span>
+                <span className="text-faint text-xs font-medium">{it.unit}</span>
               )}
             </div>
             <div className="text-muted mt-0.5 text-xs">{it.label}</div>

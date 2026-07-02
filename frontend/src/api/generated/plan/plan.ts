@@ -29,7 +29,8 @@ import type {
   HTTPValidationError,
   PagePlanOut,
   PlanCreate,
-  PlanOut
+  PlanOut,
+  PlanUpdate
 } from '../quickfitApi.schemas';
 
 import { customFetch } from '../../client';
@@ -289,6 +290,70 @@ export function useGetPlanGet<TData = Awaited<ReturnType<typeof getPlanGet>>, TE
 
 
 /**
+ * @summary Update Plan
+ */
+export const updatePlanPatch = (
+    planId: string,
+    planUpdate: PlanUpdate,
+ options?: SecondParameter<typeof customFetch>,) => {
+      
+      
+      return customFetch<PlanOut>(
+      {url: `/api/plan/${planId}`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: planUpdate
+    },
+      options);
+    }
+  
+
+
+export const getUpdatePlanPatchMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlanPatch>>, TError,{planId: string;data: PlanUpdate}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePlanPatch>>, TError,{planId: string;data: PlanUpdate}, TContext> => {
+
+const mutationKey = ['updatePlanPatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePlanPatch>>, {planId: string;data: PlanUpdate}> = (props) => {
+          const {planId,data} = props ?? {};
+
+          return  updatePlanPatch(planId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePlanPatchMutationResult = NonNullable<Awaited<ReturnType<typeof updatePlanPatch>>>
+    export type UpdatePlanPatchMutationBody = PlanUpdate
+    export type UpdatePlanPatchMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Plan
+ */
+export const useUpdatePlanPatch = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlanPatch>>, TError,{planId: string;data: PlanUpdate}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updatePlanPatch>>,
+        TError,
+        {planId: string;data: PlanUpdate},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdatePlanPatchMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Delete Plan
  */
 export const deletePlanDelete = (

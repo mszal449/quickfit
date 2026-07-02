@@ -234,6 +234,30 @@ export interface PlanSessionUpdate {
   prescription?: PlanSessionUpdatePrescription;
 }
 
+/**
+ * Leave unset to keep as-is
+ */
+export type PlanUpdateName = string | null;
+
+/**
+ * Omit to keep as-is; send null to clear
+ */
+export type PlanUpdateDescription = string | null;
+
+/**
+ * Leave unset to keep as-is
+ */
+export type PlanUpdateVisibility = PlanVisibility | null;
+
+export interface PlanUpdate {
+  /** Leave unset to keep as-is */
+  name?: PlanUpdateName;
+  /** Omit to keep as-is; send null to clear */
+  description?: PlanUpdateDescription;
+  /** Leave unset to keep as-is */
+  visibility?: PlanUpdateVisibility;
+}
+
 export type PlanVisibility = typeof PlanVisibility[keyof typeof PlanVisibility];
 
 

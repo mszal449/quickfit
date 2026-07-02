@@ -8,7 +8,7 @@ from structlog import get_logger
 from common.exceptions import NotFoundError
 from models.plan import Plan
 from models.plan_share import PlanShare, PlanShareStatus
-from plan.schema import PlanCreate, PlanFilterParams, PlanOut
+from plan.schema import PlanCreate, PlanFilterParams, PlanOut, PlanUpdate
 
 LOG = get_logger()
 
@@ -67,6 +67,28 @@ async def create_plan(db: AsyncSession, user_id: UUID, plan: PlanCreate) -> Plan
     await db.refresh(new_plan)
     LOG.info("plan_created", plan_id=str(new_plan.id), user_id=str(user_id))
     return PlanOut.model_validate(new_plan)
+
+
+async def update_plan(
+    db: AsyncSession, user_id: UUID, plan_id: UUID, payload: PlanUpdate
+) -> PlanOut:
+    req = await db.execute(select(Plan).where(Plan.id == plan_id, Plan.owner_id == user_id))
+    plan = req.scalar_one_or_none()
+    if plan is None:
+        LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
+        raise NotFoundError("Plan not found")
+
+    if payload.name is not None:
+        plan.name = payload.name
+    if "description" in payload.model_fields_set:
+        plan.description = payload.description
+    if payload.visibility is not None:
+        plan.visibility = payload.visibility
+
+    await db.flush()
+    await db.refresh(plan)
+    LOG.info("plan_updated", plan_id=str(plan_id), user_id=str(user_id))
+    return PlanOut.model_validate(plan)
 
 
 async def delete_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> None:

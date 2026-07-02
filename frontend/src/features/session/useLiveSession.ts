@@ -41,7 +41,10 @@ export function useLiveSession(workoutLogId: string) {
   }, [log, sessionQuery.data, planQuery.data, lastQuery.data, namesById]);
 
   const isLoading =
-    logQuery.isLoading || sessionQuery.isLoading || planQuery.isLoading;
+    logQuery.isLoading ||
+    sessionQuery.isLoading ||
+    planQuery.isLoading ||
+    (!!sessionId && lastQuery.isLoading);
 
   return { model, isLoading, isError: logQuery.isError };
 }

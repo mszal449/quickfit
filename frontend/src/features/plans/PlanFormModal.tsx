@@ -1,25 +1,34 @@
 import { useState } from "react";
 import { Modal } from "../../components/ui/Modal";
 import { Button } from "../../components/ui/Button";
+import type { PlanOut } from "../../api/generated/quickfitApi.schemas";
 
-export interface CreatePlanValues {
+export interface PlanFormValues {
   name: string;
   description: string | null;
 }
 
-interface CreatePlanModalProps {
+interface PlanFormModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (values: CreatePlanValues) => void;
+  onSubmit: (values: PlanFormValues) => void;
   isSubmitting: boolean;
+  plan?: Pick<PlanOut, "name" | "description"> | null;
 }
 
 const inputClass =
   "border-border bg-surface-2 text-fg placeholder:text-faint focus:border-primary/50 focus-visible:ring-primary/40 h-11 w-full rounded-xl border px-3.5 focus:outline-none focus-visible:ring-2";
 
-export function CreatePlanModal({ open, onClose, onSubmit, isSubmitting }: CreatePlanModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+export function PlanFormModal({
+  open,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  plan,
+}: PlanFormModalProps) {
+  const isEdit = !!plan;
+  const [name, setName] = useState(plan?.name ?? "");
+  const [description, setDescription] = useState(plan?.description ?? "");
 
   const canSubmit = name.trim().length > 0;
 
@@ -29,9 +38,9 @@ export function CreatePlanModal({ open, onClose, onSubmit, isSubmitting }: Creat
   };
 
   return (
-    <Modal open={open} onClose={onClose} labelledBy="create-plan-title">
-      <h2 id="create-plan-title" className="font-display text-fg text-2xl font-bold tracking-tight">
-        New plan
+    <Modal open={open} onClose={onClose} labelledBy="plan-form-title">
+      <h2 id="plan-form-title" className="font-display text-fg text-2xl font-bold tracking-tight">
+        {isEdit ? "Edit plan" : "New plan"}
       </h2>
 
       <div className="mt-4 flex flex-col gap-4">
@@ -67,7 +76,7 @@ export function CreatePlanModal({ open, onClose, onSubmit, isSubmitting }: Creat
           Cancel
         </Button>
         <Button onClick={handleSubmit} disabled={!canSubmit} loading={isSubmitting}>
-          Create plan
+          {isEdit ? "Save changes" : "Create plan"}
         </Button>
       </div>
     </Modal>

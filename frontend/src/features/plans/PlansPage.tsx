@@ -18,7 +18,7 @@ import {
 import { PlanVisibility } from "../../api/generated/quickfitApi.schemas";
 import { usePlansWithSessions, type PlanWithSessions } from "./usePlansWithSessions";
 import { PlanCard } from "./components/PlanCard";
-import { CreatePlanModal, type CreatePlanValues } from "./CreatePlanModal";
+import { PlanFormModal, type PlanFormValues } from "./PlanFormModal";
 
 type SortOrder = "newest" | "oldest";
 
@@ -60,7 +60,7 @@ export function PlansPage() {
     },
   });
 
-  const handleCreate = (values: CreatePlanValues) => {
+  const handleCreate = (values: PlanFormValues) => {
     createPlan.mutate({
       data: {
         name: values.name,
@@ -125,7 +125,7 @@ export function PlansPage() {
         onClose={() => setDeleting(null)}
       />
 
-      <CreatePlanModal
+      <PlanFormModal
         key={creating ? "create-open" : "create-closed"}
         open={creating}
         onClose={() => setCreating(false)}

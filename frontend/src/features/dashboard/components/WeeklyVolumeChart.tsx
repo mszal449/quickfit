@@ -1,5 +1,5 @@
 import { Card, Eyebrow } from "../../../components/ui/Card";
-import type { WeeklyVolumePoint } from "../../../mocks/types";
+import type { WeeklyVolumePoint } from "../aggregateStats";
 import { formatTonnes } from "../../../lib/format";
 import { cn } from "../../../lib/cn";
 

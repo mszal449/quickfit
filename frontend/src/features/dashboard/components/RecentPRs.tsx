@@ -1,6 +1,6 @@
 import { Card } from "../../../components/ui/Card";
 import { TrophyIcon } from "../../../components/icons";
-import type { PersonalRecord } from "../../../mocks/types";
+import type { PersonalRecord } from "../aggregateStats";
 import { formatWeight, relativeTime } from "../../../lib/format";
 
 /** Recent personal records list. Empty state guides the user when none exist. */

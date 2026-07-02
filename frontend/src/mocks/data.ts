@@ -1,10 +1,4 @@
-import type {
-  DashboardData,
-  Exercise,
-  PersonalRecord,
-  Plan,
-  WorkoutHistoryItem,
-} from "./types";
+import type { Exercise, Plan, WorkoutHistoryItem } from "./types";
 
 const USER_ID = "u_marcin";
 
@@ -472,56 +466,3 @@ export const HISTORY: WorkoutHistoryItem[] = [
   },
 ];
 
-export const RECENT_PRS: PersonalRecord[] = [
-  {
-    exercise_name: "Back Squat",
-    rep_label: "1RM",
-    weight: 105,
-    achieved_at: daysAgo(3),
-  },
-  {
-    exercise_name: "Bench Press",
-    rep_label: "1RM",
-    weight: 82.5,
-    achieved_at: daysAgo(8),
-  },
-  {
-    exercise_name: "Deadlift",
-    rep_label: "5RM",
-    weight: 140,
-    achieved_at: daysAgo(14),
-  },
-];
-
-/* --------------------------------- Dashboard ------------------------------- */
-
-export const DASHBOARD: DashboardData = {
-  greeting_name: "Marcin",
-  today: {
-    session_name: "Lower A",
-    plan_name: "Hypertrophy Block",
-    exercise_count: 6,
-    set_count: 18,
-    est_minutes: 52,
-    exercise_preview: ["Back Squat", "RDL", "Split Squat", "Leg Press"],
-    plan_session_id: "ps_lower_a",
-  },
-  stats: {
-    volume_week_kg: 18400,
-    sessions_done: 3,
-    sessions_planned: 4,
-    streak_days: 12,
-    prs_this_month: 2,
-  },
-  weekly_volume: [
-    { week_label: "W1", volume_kg: 11200, is_current: false },
-    { week_label: "W2", volume_kg: 12600, is_current: false },
-    { week_label: "W3", volume_kg: 12100, is_current: false },
-    { week_label: "W4", volume_kg: 14800, is_current: false },
-    { week_label: "W5", volume_kg: 13900, is_current: false },
-    { week_label: "W6", volume_kg: 16700, is_current: false },
-    { week_label: "W7", volume_kg: 15400, is_current: false },
-    { week_label: "W8", volume_kg: 18400, is_current: true },
-  ],
-  recent_prs: RECENT_PRS,
-};
