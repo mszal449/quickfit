@@ -47,14 +47,15 @@ export const getPlanSharesGet = (
     params?: GetPlanSharesGetParams,
  options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customFetch<PagePlanShareOut>(
       {url: `/api/plan-share`, method: 'GET',
         params, signal
     },
       options);
     }
+  
 
 
 
@@ -64,7 +65,7 @@ export const getGetPlanSharesGetQueryKey = (params?: GetPlanSharesGetParams,) =>
     ] as const;
     }
 
-
+    
 export const getGetPlanSharesGetQueryOptions = <TData = Awaited<ReturnType<typeof getPlanSharesGet>>, TError = HTTPValidationError>(params?: GetPlanSharesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlanSharesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -72,13 +73,13 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetPlanSharesGetQueryKey(params);
 
-
+  
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getPlanSharesGet>>> = ({ signal }) => getPlanSharesGet(params, requestOptions, signal);
 
+      
 
-
-
+      
 
    return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPlanSharesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
@@ -117,7 +118,7 @@ export function useGetPlanSharesGet<TData = Awaited<ReturnType<typeof getPlanSha
 
 export function useGetPlanSharesGet<TData = Awaited<ReturnType<typeof getPlanSharesGet>>, TError = HTTPValidationError>(
  params?: GetPlanSharesGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlanSharesGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
+ , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetPlanSharesGetQueryOptions(params,options)
@@ -139,8 +140,8 @@ export const createPlanSharePost = (
     planShareCreate: PlanShareCreate,
  options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customFetch<PlanShareOut>(
       {url: `/api/plan-share`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
@@ -148,7 +149,7 @@ export const createPlanSharePost = (
     },
       options);
     }
-
+  
 
 
 export const getCreatePlanSharePostMutationOptions = <TError = HTTPValidationError,
@@ -162,7 +163,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPlanSharePost>>, {data: PlanShareCreate}> = (props) => {
@@ -171,7 +172,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  createPlanSharePost(data,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
@@ -203,14 +204,14 @@ export const acceptPlanSharePost = (
     planShareId: string,
  options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customFetch<PlanShareOut>(
       {url: `/api/plan-share/${planShareId}/accept`, method: 'POST', signal
     },
       options);
     }
-
+  
 
 
 export const getAcceptPlanSharePostMutationOptions = <TError = HTTPValidationError,
@@ -224,7 +225,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptPlanSharePost>>, {planShareId: string}> = (props) => {
@@ -233,13 +234,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  acceptPlanSharePost(planShareId,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type AcceptPlanSharePostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptPlanSharePost>>>
-
+    
     export type AcceptPlanSharePostMutationError = HTTPValidationError
 
     /**
@@ -265,14 +266,14 @@ export const revokePlanSharePost = (
     planShareId: string,
  options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customFetch<PlanShareOut>(
       {url: `/api/plan-share/${planShareId}/revoke`, method: 'POST', signal
     },
       options);
     }
-
+  
 
 
 export const getRevokePlanSharePostMutationOptions = <TError = HTTPValidationError,
@@ -286,7 +287,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokePlanSharePost>>, {planShareId: string}> = (props) => {
@@ -295,13 +296,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  revokePlanSharePost(planShareId,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type RevokePlanSharePostMutationResult = NonNullable<Awaited<ReturnType<typeof revokePlanSharePost>>>
-
+    
     export type RevokePlanSharePostMutationError = HTTPValidationError
 
     /**
@@ -326,14 +327,14 @@ export const useRevokePlanSharePost = <TError = HTTPValidationError,
 export const removePlanShareDelete = (
     planShareId: string,
  options?: SecondParameter<typeof customFetch>,) => {
-
-
+      
+      
       return customFetch<void>(
       {url: `/api/plan-share/${planShareId}`, method: 'DELETE'
     },
       options);
     }
-
+  
 
 
 export const getRemovePlanShareDeleteMutationOptions = <TError = HTTPValidationError,
@@ -347,7 +348,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       : {...options, mutation: {...options.mutation, mutationKey}}
       : {mutation: { mutationKey, }, request: undefined};
 
-
+      
 
 
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof removePlanShareDelete>>, {planShareId: string}> = (props) => {
@@ -356,13 +357,13 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
           return  removePlanShareDelete(planShareId,requestOptions)
         }
 
-
+        
 
 
   return  { mutationFn, ...mutationOptions }}
 
     export type RemovePlanShareDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof removePlanShareDelete>>>
-
+    
     export type RemovePlanShareDeleteMutationError = HTTPValidationError
 
     /**
@@ -381,33 +382,31 @@ export const useRemovePlanShareDelete = <TError = HTTPValidationError,
 
       return useMutation(mutationOptions, queryClient);
     }
-
-
-
-/**
+    /**
  * @summary Get Share Progress
  */
 export const getShareProgressGet = (
     planShareId: string,
  options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
 ) => {
-
-
+      
+      
       return customFetch<PageWorkoutLogOut>(
       {url: `/api/plan-share/${planShareId}/progress`, method: 'GET', signal
     },
       options);
     }
+  
 
 
 
-export const getGetShareProgressGetQueryKey = (planShareId: string,) => {
+export const getGetShareProgressGetQueryKey = (planShareId?: string,) => {
     return [
     `/api/plan-share/${planShareId}/progress`
     ] as const;
     }
 
-
+    
 export const getGetShareProgressGetQueryOptions = <TData = Awaited<ReturnType<typeof getShareProgressGet>>, TError = HTTPValidationError>(planShareId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -415,15 +414,15 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetShareProgressGetQueryKey(planShareId);
 
-
+  
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getShareProgressGet>>> = ({ signal }) => getShareProgressGet(planShareId, requestOptions, signal);
 
+      
 
+      
 
-
-
-   return  { queryKey, queryFn, enabled: !!planShareId, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(planShareId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetShareProgressGetQueryResult = NonNullable<Awaited<ReturnType<typeof getShareProgressGet>>>
@@ -431,9 +430,37 @@ export type GetShareProgressGetQueryError = HTTPValidationError
 
 
 export function useGetShareProgressGet<TData = Awaited<ReturnType<typeof getShareProgressGet>>, TError = HTTPValidationError>(
+ planShareId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getShareProgressGet>>,
+          TError,
+          Awaited<ReturnType<typeof getShareProgressGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetShareProgressGet<TData = Awaited<ReturnType<typeof getShareProgressGet>>, TError = HTTPValidationError>(
+ planShareId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getShareProgressGet>>,
+          TError,
+          Awaited<ReturnType<typeof getShareProgressGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetShareProgressGet<TData = Awaited<ReturnType<typeof getShareProgressGet>>, TError = HTTPValidationError>(
  planShareId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Share Progress
+ */
+
+export function useGetShareProgressGet<TData = Awaited<ReturnType<typeof getShareProgressGet>>, TError = HTTPValidationError>(
+ planShareId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getShareProgressGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetShareProgressGetQueryOptions(planShareId,options)
 
@@ -443,3 +470,7 @@ export function useGetShareProgressGet<TData = Awaited<ReturnType<typeof getShar
 
   return query;
 }
+
+
+
+

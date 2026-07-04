@@ -209,13 +209,13 @@ export interface PagePlanOut {
   total: number;
 }
 
-export interface PagePlanShareOut {
-  items: PlanShareOut[];
+export interface PagePlanSessionOut {
+  items: PlanSessionOut[];
   total: number;
 }
 
-export interface PagePlanSessionOut {
-  items: PlanSessionOut[];
+export interface PagePlanShareOut {
+  items: PlanShareOut[];
   total: number;
 }
 
@@ -281,11 +281,6 @@ export interface PlanShareCreate {
   shared_with_user_id: string;
 }
 
-export interface PlanShareUserOut {
-  id: string;
-  email: string;
-}
-
 export interface PlanShareOut {
   id: string;
   plan_id: string;
@@ -308,6 +303,11 @@ export const PlanShareStatus = {
   revoked: 'revoked',
 } as const;
 
+export interface PlanShareUserOut {
+  id: string;
+  email: string;
+}
+
 /**
  * Leave unset to keep as-is
  */
@@ -323,11 +323,6 @@ export type PlanUpdateDescription = string | null;
  */
 export type PlanUpdateVisibility = PlanVisibility | null;
 
-/**
- * Set True to make this the Dashboard's default plan (unsets any other default plan you own). Leave unset to keep as-is.
- */
-export type PlanUpdateIsDefault = boolean | null;
-
 export interface PlanUpdate {
   /** Leave unset to keep as-is */
   name?: PlanUpdateName;
@@ -335,8 +330,6 @@ export interface PlanUpdate {
   description?: PlanUpdateDescription;
   /** Leave unset to keep as-is */
   visibility?: PlanUpdateVisibility;
-  /** Set True to make this the Dashboard's default plan (unsets any other default plan you own). Leave unset to keep as-is. */
-  is_default?: PlanUpdateIsDefault;
 }
 
 export type PlanVisibility = typeof PlanVisibility[keyof typeof PlanVisibility];
@@ -618,6 +611,17 @@ shared_with_me?: boolean;
 shared_by_user_id?: string | null;
 };
 
+export type GetPlanSharesGetParams = {
+/**
+ * Filter by plan
+ */
+plan_id?: string | null;
+/**
+ * Filter by status
+ */
+status?: PlanShareStatus | null;
+};
+
 export type GetWorkoutLogsGetParams = {
 /**
  * Filter by workout log status
@@ -639,16 +643,5 @@ export type GetFriendshipsGetParams = {
  * Filter by status
  */
 status?: FriendshipStatus | null;
-};
-
-export type GetPlanSharesGetParams = {
-/**
- * Filter by plan
- */
-plan_id?: string | null;
-/**
- * Filter by status
- */
-status?: PlanShareStatus | null;
 };
 

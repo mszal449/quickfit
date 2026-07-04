@@ -111,8 +111,8 @@ export function ShareModal({
           Share plan
         </h2>
         <p className="text-muted mt-2 text-sm">
-          Share this plan with a friend — they'll need to accept before it
-          shows up in their plans.
+          Share this plan with a friend — they'll need to accept before it shows
+          up in their plans.
         </p>
 
         {invitableFriends.length > 0 && (
@@ -234,7 +234,9 @@ export function ShareModal({
             : undefined
         }
         confirmLabel={
-          revoking?.status === PlanShareStatus.accepted ? "Revoke" : "Cancel invite"
+          revoking?.status === PlanShareStatus.accepted
+            ? "Revoke"
+            : "Cancel invite"
         }
         destructive
         onConfirm={handleRevokeOrCancel}

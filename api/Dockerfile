@@ -18,7 +18,7 @@ COPY tests/ tests/
 ENTRYPOINT [ "uv", "run", "pytest" ]
 
 
-FROM python:3.13-slim-bookworm as runtime
+FROM python:3.13-slim-bookworm AS runtime
 
 WORKDIR /app
 COPY --from=builder /app /app

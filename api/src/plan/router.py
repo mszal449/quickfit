@@ -41,6 +41,16 @@ async def update_plan(
     return await service.update_plan(db, user_id, plan_id, payload)
 
 
+@router.post("/{plan_id}/set-default", response_model=PlanOut)
+async def set_default_plan(user_id: CurrentUserId, plan_id: UUID, db: DbSession) -> PlanOut:
+    return await service.set_default_plan(db, user_id, plan_id)
+
+
+@router.post("/{plan_id}/unset-default", response_model=PlanOut)
+async def unset_default_plan(user_id: CurrentUserId, plan_id: UUID, db: DbSession) -> PlanOut:
+    return await service.unset_default_plan(db, user_id, plan_id)
+
+
 @router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_plan(user_id: CurrentUserId, plan_id: UUID, db: DbSession) -> None:
     return await service.delete_plan(db, user_id, plan_id)

@@ -131,7 +131,9 @@ export function SessionDraftEditor({
       {!readOnly && (
         <div
           className="bg-bg/95 border-border sticky bottom-0 z-20 mt-4 flex items-center justify-between gap-3 border-t py-3 backdrop-blur"
-          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+          style={{
+            paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+          }}
         >
           <span className="text-faint font-mono text-xs">
             {draft.length} exercise{draft.length === 1 ? "" : "s"}

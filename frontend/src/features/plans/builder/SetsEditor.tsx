@@ -8,7 +8,11 @@ interface SetsEditorProps {
   readOnly?: boolean;
 }
 
-export function SetsEditor({ sets, onChange, readOnly = false }: SetsEditorProps) {
+export function SetsEditor({
+  sets,
+  onChange,
+  readOnly = false,
+}: SetsEditorProps) {
   const update = (index: number, patch: Partial<DraftSet>) => {
     onChange(sets.map((s, i) => (i === index ? { ...s, ...patch } : s)));
   };

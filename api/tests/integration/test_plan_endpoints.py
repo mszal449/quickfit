@@ -3,6 +3,7 @@ import uuid
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.testing.warnings import assert_warnings
 
 from auth.dependencies import get_current_user_id
 from models.plan import Plan, PlanVisibility
@@ -190,20 +191,24 @@ async def test_delete_plan_not_owner_returns_not_found(
     assert still_there.status_code == 200
 
 
-async def test_set_default_plan_unsets_previous_default(
+async def test_set_unset_default_plan(
     client: AsyncClient, db_session: AsyncSession, user: User
 ):
-    first = Plan(owner_id=user.id, name="First", description=None, is_default=True)
-    second = Plan(owner_id=user.id, name="Second", description=None)
-    db_session.add_all([first, second])
+    plan = Plan(owner_id=user.id, name="First", description=None)
+    db_session.add_all([plan])
     await db_session.flush()
 
-    resp = await client.patch(f"/api/plan/{second.id}", json={"is_default": True})
+    resp = await client.post(f"/api/plan/{plan.id}/set-default")
     assert resp.status_code == 200
     assert resp.json()["is_default"] is True
 
-    await db_session.refresh(first)
-    assert first.is_default is False
+    await db_session.refresh(user)
+    assert user.default_plan_id == plan.id
+
+    resp = await client.get(f"/api/plan/{plan.id}/unset-default")
+    assert resp.status_code == 200
+    assert resp.json()["is_default"] is None
+
 
 
 async def test_plan_endpoints_require_auth(app: FastAPI):

@@ -141,7 +141,9 @@ async def accept_friend_request(
     await db.refresh(friendship)
 
     other = await User.get(db, friendship.requester_id)
-    assert other is not None
+    if other is None:
+        LOG.warning("friendship_requester_missing", friendship_id=str(friendship_id))
+        raise NotFoundError("Friend request requester not found")
     LOG.info("friend_request_accepted", friendship_id=str(friendship_id), user_id=str(user_id))
     return _to_friendship_out(friendship, other)
 

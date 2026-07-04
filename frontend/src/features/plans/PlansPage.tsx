@@ -59,18 +59,19 @@ export function PlansPage() {
       .sort(
         (a, b) =>
           sign *
-          (new Date(a.created_at).getTime() -
-            new Date(b.created_at).getTime()),
+          (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
       );
     return defaultPlan ? [defaultPlan, ...rest] : rest;
   }, [plans, sortOrder]);
 
-  const { data: sharedPlans, isLoading: sharedLoading } = usePlansWithSessions(
-    { shared_with_me: true },
-  );
+  const { data: sharedPlans, isLoading: sharedLoading } = usePlansWithSessions({
+    shared_with_me: true,
+  });
 
-  const { data: allSharesPage, isLoading: sharesLoading } =
-    useGetPlanSharesGet(undefined, { query: { enabled: view === "shared" } });
+  const { data: allSharesPage, isLoading: sharesLoading } = useGetPlanSharesGet(
+    undefined,
+    { query: { enabled: view === "shared" } },
+  );
   const incomingInvites = (allSharesPage?.items ?? []).filter(
     (s) =>
       s.status === PlanShareStatus.pending && s.owner_id !== currentUser?.id,
@@ -78,7 +79,10 @@ export function PlansPage() {
   const acceptedShareIdByPlanId = useMemo(() => {
     const map = new Map<string, string>();
     for (const s of allSharesPage?.items ?? []) {
-      if (s.status === PlanShareStatus.accepted && s.owner_id !== currentUser?.id) {
+      if (
+        s.status === PlanShareStatus.accepted &&
+        s.owner_id !== currentUser?.id
+      ) {
         map.set(s.plan_id, s.id);
       }
     }

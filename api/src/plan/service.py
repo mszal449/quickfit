@@ -1,3 +1,4 @@
+from email.policy import default
 from uuid import UUID
 
 from sqlalchemy import exists, or_, select, update
@@ -5,15 +6,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from structlog import get_logger
 
-from common.exceptions import NotFoundError
+from common.exceptions import ForbiddenError, NotFoundError
 from models.plan import Plan
 from models.plan_share import PlanShare, PlanShareStatus
+from models.user import User
 from plan.schema import PlanCreate, PlanFilterParams, PlanOut, PlanUpdate
 
 LOG = get_logger()
 
 
-# plan/service.py
+async def _get_default_plan(db: AsyncSession, user_id: UUID) -> UUID | None:
+    return await db.scalar(select(User.default_plan_id).where(User.id == user_id))
+
+
+def _to_plan_out(plan: Plan, default_plan_id: UUID | None) -> PlanOut:
+    return PlanOut(
+        id=plan.id,
+        owner_id=plan.owner_id,
+        name=plan.name,
+        description=plan.description,
+        visibility=plan.visibility,
+        is_default=(default_plan_id is not None and plan.id == default_plan_id),
+        created_at=plan.created_at,
+    )
+
+
 async def list_plans(db: AsyncSession, user_id: UUID, filters: PlanFilterParams) -> list[PlanOut]:
     if filters.shared_with_me or filters.shared_by_user_id:
         query = (
@@ -27,7 +44,8 @@ async def list_plans(db: AsyncSession, user_id: UUID, filters: PlanFilterParams)
         query = select(Plan).where(Plan.owner_id == user_id)
 
     req = await db.execute(query.order_by(Plan.created_at.desc()))
-    return [PlanOut.model_validate(plan) for plan in req.scalars().all()]
+    default_plan = await _get_default_plan(db, user_id)
+    return [_to_plan_out(plan, default_plan) for plan in req.scalars().all()]
 
 
 async def get_plan(db: AsyncSession, plan_id: UUID, user_id: UUID) -> PlanOut:
@@ -46,7 +64,8 @@ async def get_plan(db: AsyncSession, plan_id: UUID, user_id: UUID) -> PlanOut:
     if plan is None:
         LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
         raise NotFoundError("Plan not found")
-    return PlanOut.model_validate(plan)
+    default_plan = await _get_default_plan(db, user_id)
+    return _to_plan_out(plan, default_plan)
 
 
 async def get_owned_plan(db: AsyncSession, plan_id: UUID, user_id: UUID) -> PlanOut:
@@ -55,7 +74,8 @@ async def get_owned_plan(db: AsyncSession, plan_id: UUID, user_id: UUID) -> Plan
     if plan is None:
         LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
         raise NotFoundError("Plan not found")
-    return PlanOut.model_validate(plan)
+    default_plan = await _get_default_plan(db, user_id)
+    return _to_plan_out(plan, default_plan)
 
 
 async def create_plan(db: AsyncSession, user_id: UUID, plan: PlanCreate) -> PlanOut:
@@ -66,7 +86,7 @@ async def create_plan(db: AsyncSession, user_id: UUID, plan: PlanCreate) -> Plan
     await db.flush()
     await db.refresh(new_plan)
     LOG.info("plan_created", plan_id=str(new_plan.id), user_id=str(user_id))
-    return PlanOut.model_validate(new_plan)
+    return _to_plan_out(new_plan, None)
 
 
 async def update_plan(
@@ -84,19 +104,43 @@ async def update_plan(
         plan.description = payload.description
     if payload.visibility is not None:
         plan.visibility = payload.visibility
-    if payload.is_default is not None:
-        if payload.is_default:
-            await db.execute(
-                update(Plan).where(Plan.owner_id == user_id, Plan.id != plan_id).values(
-                    is_default=False
-                )
-            )
-        plan.is_default = payload.is_default
 
     await db.flush()
     await db.refresh(plan)
     LOG.info("plan_updated", plan_id=str(plan_id), user_id=str(user_id))
-    return PlanOut.model_validate(plan)
+    default_plan = await _get_default_plan(db, user_id)
+    return _to_plan_out(plan, default_plan)
+
+
+async def set_default_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> PlanOut:
+    req = await db.execute(
+        update(User.default_plan_id).where(User.id == user_id).values(default_plan_id=plan_id)
+    )
+    plan = req.scalar_one_or_none()
+    if plan is None:
+        LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
+        raise NotFoundError("Plan not found")
+    return _to_plan_out(plan, plan.id)
+
+
+async def unset_default_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> PlanOut:
+    cur_default = await _get_default_plan(db, user_id)
+    if plan_id != cur_default:
+        LOG.warning(
+            "default_plan_unset_forbidden",
+            plan_id=plan_id,
+            default_plan_id=cur_default,
+            user_id=user_id,
+        )
+        raise ForbiddenError("Only the current default plan can be unset")
+    req = await db.execute(
+        update(User.default_plan_id).where(User.id == user_id).values(default_plan_id=None)
+    )
+    plan = req.scalar_one_or_none()
+    if plan is None:
+        LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
+        raise NotFoundError("Plan not found")
+    return _to_plan_out(plan, None)
 
 
 async def delete_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> None:

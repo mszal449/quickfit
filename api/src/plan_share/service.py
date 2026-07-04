@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -45,7 +45,9 @@ def _to_plan_share_out(share: PlanShare, other_user: User) -> PlanShareOut:
     )
 
 
-async def _get_related_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID) -> PlanShare:
+async def _get_related_plan_share(
+    db: AsyncSession, user_id: UUID, plan_share_id: UUID
+) -> PlanShare:
     req = await db.execute(
         select(PlanShare).where(
             PlanShare.id == plan_share_id,
@@ -124,14 +126,10 @@ async def create_plan_share(
         existing.status = PlanShareStatus.PENDING
         await db.flush()
         await db.refresh(existing)
-        LOG.info(
-            "plan_share_reactivated", plan_share_id=str(existing.id), user_id=str(user_id)
-        )
+        LOG.info("plan_share_reactivated", plan_share_id=str(existing.id), user_id=str(user_id))
         return _to_plan_share_out(existing, target)
 
-    share = PlanShare(
-        plan_id=payload.plan_id, owner_id=user_id, shared_with_user_id=target.id
-    )
+    share = PlanShare(plan_id=payload.plan_id, owner_id=user_id, shared_with_user_id=target.id)
     db.add(share)
     try:
         await db.flush()
@@ -161,7 +159,9 @@ async def accept_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID
     await db.refresh(share)
 
     owner = await User.get(db, share.owner_id)
-    assert owner is not None
+    if owner is None:
+        LOG.warning("plan_share_owner_missing", plan_share_id=str(plan_share_id))
+        raise NotFoundError("Plan share owner not found")
     LOG.info("plan_share_accepted", plan_share_id=str(plan_share_id), user_id=str(user_id))
     return _to_plan_share_out(share, owner)
 
@@ -181,7 +181,13 @@ async def revoke_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID
     await db.refresh(share)
 
     recipient = await User.get(db, share.shared_with_user_id)
-    assert recipient is not None
+    if recipient is None:
+        LOG.warning("plan_share_recipient_missing", plan_share_id=str(plan_share_id))
+        raise NotFoundError("Plan share recipient not found")
+    if recipient.default_plan_id == share.plan_id:
+        await db.execute(
+            update(User.default_plan_id).where(User.id == recipient.id).values(default_plan_id=None)
+        )
     LOG.info("plan_share_revoked", plan_share_id=str(plan_share_id), user_id=str(user_id))
     return _to_plan_share_out(share, recipient)
 
@@ -190,8 +196,12 @@ async def remove_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID
     share = await _get_related_plan_share(db, user_id, plan_share_id)
     if share.owner_id == user_id and share.status != PlanShareStatus.PENDING:
         raise ConflictError("Use revoke to remove an accepted share")
-
+    recipient = await User.get(db, share.shared_with_user_id)
     await db.delete(share)
+    if recipient is not None and recipient.default_plan_id == share.plan_id:
+        await db.execute(
+            update(User.default_plan_id).where(User.id == recipient.id).values(default_plan_id=None)
+        )
     await db.flush()
     LOG.info("plan_share_removed", plan_share_id=str(plan_share_id), user_id=str(user_id))
 

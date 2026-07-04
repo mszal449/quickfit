@@ -171,7 +171,12 @@ export function SessionEditor({
             {readOnly ? (
               i < exercises.length - 1 && <div key="gap" className="h-3" />
             ) : (
-              <Slot key="slot" index={i + 1} drag={drag} onInsert={onInsertAt} />
+              <Slot
+                key="slot"
+                index={i + 1}
+                drag={drag}
+                onInsert={onInsertAt}
+              />
             )}
           </div>
         );

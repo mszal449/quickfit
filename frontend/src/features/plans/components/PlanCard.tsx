@@ -26,7 +26,12 @@ const MAX_VISIBLE_SESSIONS = 3;
 
 /** Plan summary tile in the plans list; links to the builder. Every card has the
  * same height regardless of content — each region reserves fixed/min space. */
-export function PlanCard({ plan, onDelete, onLeave, onSetDefault }: PlanCardProps) {
+export function PlanCard({
+  plan,
+  onDelete,
+  onLeave,
+  onSetDefault,
+}: PlanCardProps) {
   const sessionCount = plan.sessions.length;
   const visibleSessions = plan.sessions.slice(0, MAX_VISIBLE_SESSIONS);
   const hiddenCount = sessionCount - visibleSessions.length;

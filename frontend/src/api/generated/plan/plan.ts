@@ -414,4 +414,128 @@ export const useDeletePlanDelete = <TError = HTTPValidationError,
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * @summary Set Default Plan
+ */
+export const setDefaultPlanPost = (
+    planId: string,
+ options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return customFetch<PlanOut>(
+      {url: `/api/plan/${planId}/set-default`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getSetDefaultPlanPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultPlanPost>>, TError,{planId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setDefaultPlanPost>>, TError,{planId: string}, TContext> => {
+
+const mutationKey = ['setDefaultPlanPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setDefaultPlanPost>>, {planId: string}> = (props) => {
+          const {planId} = props ?? {};
+
+          return  setDefaultPlanPost(planId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetDefaultPlanPostMutationResult = NonNullable<Awaited<ReturnType<typeof setDefaultPlanPost>>>
+    
+    export type SetDefaultPlanPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Set Default Plan
+ */
+export const useSetDefaultPlanPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setDefaultPlanPost>>, TError,{planId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setDefaultPlanPost>>,
+        TError,
+        {planId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getSetDefaultPlanPostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Unset Default Plan
+ */
+export const unsetDefaultPlanPost = (
+    planId: string,
+ options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
+) => {
+      
+      
+      return customFetch<PlanOut>(
+      {url: `/api/plan/${planId}/unset-default`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getUnsetDefaultPlanPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsetDefaultPlanPost>>, TError,{planId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unsetDefaultPlanPost>>, TError,{planId: string}, TContext> => {
+
+const mutationKey = ['unsetDefaultPlanPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unsetDefaultPlanPost>>, {planId: string}> = (props) => {
+          const {planId} = props ?? {};
+
+          return  unsetDefaultPlanPost(planId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnsetDefaultPlanPostMutationResult = NonNullable<Awaited<ReturnType<typeof unsetDefaultPlanPost>>>
+    
+    export type UnsetDefaultPlanPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Unset Default Plan
+ */
+export const useUnsetDefaultPlanPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unsetDefaultPlanPost>>, TError,{planId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unsetDefaultPlanPost>>,
+        TError,
+        {planId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUnsetDefaultPlanPostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
     
