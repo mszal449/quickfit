@@ -1,6 +1,12 @@
-import { ChevronLeftIcon } from "../../../components/icons";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  CloseIcon,
+  MoreIcon,
+} from "../../../components/icons";
 import { formatClock } from "../../../lib/format";
 import { cn } from "../../../lib/cn";
+import { Menu } from "../../../components/ui/Menu";
 
 interface SessionTopBarProps {
   sessionName: string;
@@ -10,10 +16,10 @@ interface SessionTopBarProps {
   incompleteIndices?: number[];
   onBack: () => void;
   onFinish: () => void;
+  onCancel: () => void;
   onSelectExercise: (index: number) => void;
 }
 
-/** Live-session header: back, centred title + running timer, finish, progress dots. */
 export function SessionTopBar({
   sessionName,
   elapsedSeconds,
@@ -22,6 +28,7 @@ export function SessionTopBar({
   incompleteIndices = [],
   onBack,
   onFinish,
+  onCancel,
   onSelectExercise,
 }: SessionTopBarProps) {
   return (
@@ -48,13 +55,23 @@ export function SessionTopBar({
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={onFinish}
-          className="text-primary hover:bg-primary-soft focus-visible:ring-primary/70 h-10 cursor-pointer rounded-lg px-3 font-semibold focus-visible:ring-2 focus-visible:outline-none"
-        >
-          Finish
-        </button>
+        <Menu
+          label="Session options"
+          trigger={<MoreIcon size={18} />}
+          items={[
+            {
+              label: "Finish workout",
+              icon: <CheckIcon size={16} />,
+              onSelect: onFinish,
+            },
+            {
+              label: "Cancel workout",
+              icon: <CloseIcon size={16} />,
+              destructive: true,
+              onSelect: onCancel,
+            },
+          ]}
+        />
       </div>
 
       <div className="mx-auto flex max-w-2xl gap-1.5 px-4 pb-3">

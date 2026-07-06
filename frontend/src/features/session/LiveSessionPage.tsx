@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Tag } from "../../components/ui/Tag";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
-import { formatReps, formatWeight } from "../../lib/format";
+import { ChevronDownIcon } from "../../components/icons";
+import { cn } from "../../lib/cn";
+import { formatClock, formatReps, formatWeight } from "../../lib/format";
 import { useLiveSession } from "./useLiveSession";
 import { useSetMutations } from "./useSetMutations";
 import { useWorkoutLogActions } from "./useWorkoutLogActions";
@@ -15,6 +17,11 @@ import { LogSetWidget } from "./components/LogSetWidget";
 import { UpNextBar } from "./components/UpNextBar";
 import { RestTimerBar } from "./components/RestTimerBar";
 import { buildSummary } from "./buildSummary";
+import { useGetWorkoutLogsGet } from "../../api/generated/workout-log/workout-log";
+import { useGetExercisesGet } from "../../api/generated/exercise/exercise";
+import { ExerciseCategory, WorkoutLogStatus } from "../../api/generated/quickfitApi.schemas";
+import { buildExerciseProgressSeries } from "../dashboard/aggregateStats";
+import { ExerciseProgressChart } from "../../components/charts/ExerciseProgressChart";
 import type { LiveExercise, LiveSetRow } from "./types";
 
 function isExerciseDone(ex: LiveExercise): boolean {
@@ -45,7 +52,7 @@ export function LiveSessionPage() {
 
   const { model, isLoading } = useLiveSession(workoutLogId);
   const { addSet, updateSet } = useSetMutations(workoutLogId);
-  const { finish } = useWorkoutLogActions();
+  const { finish, discard, isDiscarding } = useWorkoutLogActions();
   const restTimer = useRestTimer();
   const toast = useToast();
   const notifiedRef = useRef(false);
@@ -53,7 +60,19 @@ export function LiveSessionPage() {
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
   const elapsed = useElapsedSeconds(model?.started_at);
+
+  const { data: completedPage } = useGetWorkoutLogsGet({
+    status: WorkoutLogStatus.completed,
+  });
+  const { data: exercisesPage } = useGetExercisesGet();
+  const categoryById = useMemo(() => {
+    const map = new Map<string, ExerciseCategory>();
+    for (const e of exercisesPage?.items ?? []) map.set(e.id, e.category);
+    return map;
+  }, [exercisesPage]);
 
   const exerciseCount = model?.exercises.length ?? 0;
   const lastIndex = exerciseCount - 1;
@@ -127,9 +146,19 @@ export function LiveSessionPage() {
 
   const goToExercise = (index: number) => {
     setEditingSetId(null);
+    setShowProgress(false);
     restTimer.skip();
     setExerciseIndex(Math.max(0, Math.min(exerciseCount - 1, index)));
   };
+
+  const category =
+    categoryById.get(exercise.exercise_id) ?? ExerciseCategory.strength;
+  const progressSeries = buildExerciseProgressSeries(
+    completedPage?.items ?? [],
+    exercise.exercise_id,
+    category,
+  );
+  const hasProgressChart = progressSeries.length >= 2;
 
   const handleLog = (weight: number, reps: number) => {
     if (!activeSet) return;
@@ -181,6 +210,12 @@ export function LiveSessionPage() {
       .catch(() => {});
   };
 
+  const cancelWorkout = () => {
+    discard(workoutLogId)
+      .then(() => navigate("/dashboard"))
+      .catch(() => {});
+  };
+
   return (
     <div className="bg-bg flex min-h-dvh flex-col">
       <SessionTopBar
@@ -191,6 +226,7 @@ export function LiveSessionPage() {
         incompleteIndices={incompleteIndices}
         onBack={() => navigate("/dashboard")}
         onFinish={() => setConfirmFinish(true)}
+        onCancel={() => setConfirmCancel(true)}
         onSelectExercise={goToExercise}
       />
 
@@ -208,7 +244,41 @@ export function LiveSessionPage() {
             {activeSet?.weight != null && (
               <Tag tone="muted">{formatWeight(activeSet.weight)} kg</Tag>
             )}
+            {hasProgressChart && (
+              <button
+                type="button"
+                onClick={() => setShowProgress((v) => !v)}
+                className="text-faint hover:text-primary ml-auto flex cursor-pointer items-center gap-1 font-mono text-xs"
+              >
+                History
+                <ChevronDownIcon
+                  size={13}
+                  className={cn(
+                    "transition-transform",
+                    showProgress && "rotate-180",
+                  )}
+                />
+              </button>
+            )}
           </div>
+          {hasProgressChart && showProgress && (
+            <div className="mt-3">
+              <ExerciseProgressChart
+                data={progressSeries}
+                unit={category === ExerciseCategory.cardio ? "" : "kg"}
+                formatValue={
+                  category === ExerciseCategory.cardio
+                    ? formatClock
+                    : formatWeight
+                }
+                title={
+                  category === ExerciseCategory.cardio
+                    ? "Duration progress"
+                    : "Top weight progress"
+                }
+              />
+            </div>
+          )}
         </div>
 
         <SetsTable
@@ -249,13 +319,22 @@ export function LiveSessionPage() {
                 <p className="text-success text-sm font-semibold">
                   All sets logged for {exercise.name}
                 </p>
-                {nextExercise && (
+                {nextExercise ? (
                   <button
                     onClick={() => goToExercise(safeIndex + 1)}
                     className="text-muted mt-2 cursor-pointer font-mono text-xs underline-offset-2 hover:underline"
                   >
                     Continue to {nextExercise.name} →
                   </button>
+                ) : (
+                  <Button
+                    size="lg"
+                    fullWidth
+                    className="mt-3"
+                    onClick={() => setConfirmFinish(true)}
+                  >
+                    Finish workout
+                  </Button>
                 )}
               </div>
             )}
@@ -295,6 +374,16 @@ export function LiveSessionPage() {
         confirmLabel="Finish"
         onConfirm={confirmFinishWorkout}
         onClose={() => setConfirmFinish(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmCancel}
+        title="Cancel this workout?"
+        description="This permanently deletes everything logged in this session. This can't be undone."
+        confirmLabel={isDiscarding ? "Cancelling…" : "Cancel workout"}
+        destructive
+        onConfirm={cancelWorkout}
+        onClose={() => setConfirmCancel(false)}
       />
     </div>
   );

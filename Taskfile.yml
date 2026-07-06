@@ -99,7 +99,7 @@ tasks:
       - echo "{{.TAG}}" > .local-image-tag
 
   redeploy-local:
-    desc: "Build, load, and roll out backend+frontend on minikube, tagged to the current commit. Requires a clean working tree."
+    desc: "Build, load, and roll out backend+frontend on minikube with a fresh unique image tag"
     cmds:
       - task: build-local
       - kubectl set image deployment/backend backend=quickfit-api:$(cat .local-image-tag)
