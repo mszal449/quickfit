@@ -5,11 +5,18 @@ import { Card } from "../../components/ui/Card";
 import { Tag } from "../../components/ui/Tag";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { ChevronLeftIcon, TrophyIcon } from "../../components/icons";
-import { formatWeight, relativeTime } from "../../lib/format";
+import { formatClock, formatWeight, relativeTime } from "../../lib/format";
 import { useGetExerciseGet } from "../../api/generated/exercise/exercise";
 import { useGetWorkoutLogsGet } from "../../api/generated/workout-log/workout-log";
-import { WorkoutLogStatus } from "../../api/generated/quickfitApi.schemas";
-import { exerciseHistory } from "../dashboard/aggregateStats";
+import {
+  ExerciseCategory,
+  WorkoutLogStatus,
+} from "../../api/generated/quickfitApi.schemas";
+import {
+  buildExerciseProgressSeries,
+  exerciseHistory,
+} from "../dashboard/aggregateStats";
+import { ExerciseProgressChart } from "../../components/charts/ExerciseProgressChart";
 
 const MUSCLE_GROUP_LABELS: Record<string, string> = {
   chest: "Chest",
@@ -44,6 +51,18 @@ export function ExerciseDetailPage() {
   const history = useMemo(
     () => exerciseHistory(completedPage?.items ?? [], exerciseId),
     [completedPage, exerciseId],
+  );
+
+  const progressSeries = useMemo(
+    () =>
+      exercise
+        ? buildExerciseProgressSeries(
+            completedPage?.items ?? [],
+            exerciseId,
+            exercise.category,
+          )
+        : [],
+    [completedPage, exerciseId, exercise],
   );
 
   const bestSet = useMemo(() => {
@@ -129,6 +148,25 @@ export function ExerciseDetailPage() {
             </div>
           </div>
         </Card>
+      )}
+
+      {progressSeries.length >= 2 && (
+        <div className="mb-4">
+          <ExerciseProgressChart
+            data={progressSeries}
+            unit={exercise.category === ExerciseCategory.cardio ? "" : "kg"}
+            formatValue={
+              exercise.category === ExerciseCategory.cardio
+                ? formatClock
+                : formatWeight
+            }
+            title={
+              exercise.category === ExerciseCategory.cardio
+                ? "Duration progress"
+                : "Top weight progress"
+            }
+          />
+        </div>
       )}
 
       {history.length === 0 ? (

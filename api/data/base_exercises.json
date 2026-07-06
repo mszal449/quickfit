@@ -19,6 +19,7 @@
   {"name": "Machine Chest Press", "category": "STRENGTH", "muscle_group": "CHEST"},
   {"name": "Incline Machine Chest Press", "category": "STRENGTH", "muscle_group": "CHEST"},
   {"name": "Chest Dip", "category": "STRENGTH", "muscle_group": "CHEST"},
+  {"name": "Dip", "category": "STRENGTH", "muscle_group": "CHEST"},
   {"name": "Push-Up", "category": "STRENGTH", "muscle_group": "CHEST"},
   {"name": "Incline Push-Up", "category": "STRENGTH", "muscle_group": "CHEST"},
   {"name": "Decline Push-Up", "category": "STRENGTH", "muscle_group": "CHEST"},

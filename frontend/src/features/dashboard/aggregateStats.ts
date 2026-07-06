@@ -1,4 +1,7 @@
-import type { WorkoutLogOut } from "../../api/generated/quickfitApi.schemas";
+import {
+  ExerciseCategory,
+  type WorkoutLogOut,
+} from "../../api/generated/quickfitApi.schemas";
 
 export interface WeeklyVolumePoint {
   week_label: string;
@@ -157,6 +160,43 @@ export function computeAllPRs(
   }
 
   return prs.reverse();
+}
+
+export interface ExerciseProgressPoint {
+  date: string;
+  value: number;
+}
+
+export function buildExerciseProgressSeries(
+  logs: WorkoutLogOut[],
+  exerciseId: string,
+  category: ExerciseCategory,
+): ExerciseProgressPoint[] {
+  const sessions = logs
+    .filter((l) => l.sets.some((s) => s.exercise_id === exerciseId))
+    .sort(
+      (a, b) =>
+        new Date(a.started_at).getTime() - new Date(b.started_at).getTime(),
+    );
+
+  const points: ExerciseProgressPoint[] = [];
+  for (const log of sessions) {
+    const sets = log.sets.filter((s) => s.exercise_id === exerciseId);
+    if (category === ExerciseCategory.cardio) {
+      const totalSeconds = sets.reduce(
+        (sum, s) => sum + (s.duration_seconds ?? 0),
+        0,
+      );
+      if (totalSeconds > 0) points.push({ date: log.started_at, value: totalSeconds });
+    } else {
+      const topWeight = sets.reduce<number | null>((best, s) => {
+        if (s.weight == null) return best;
+        return best == null || s.weight > best ? s.weight : best;
+      }, null);
+      if (topWeight != null) points.push({ date: log.started_at, value: topWeight });
+    }
+  }
+  return points;
 }
 
 export function exerciseHistory(
