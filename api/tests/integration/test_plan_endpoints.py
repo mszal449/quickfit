@@ -3,7 +3,6 @@ import uuid
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.testing.warnings import assert_warnings
 
 from auth.dependencies import get_current_user_id
 from models.plan import Plan, PlanVisibility
@@ -191,11 +190,9 @@ async def test_delete_plan_not_owner_returns_not_found(
     assert still_there.status_code == 200
 
 
-async def test_set_unset_default_plan(
-    client: AsyncClient, db_session: AsyncSession, user: User
-):
+async def test_set_unset_default_plan(client: AsyncClient, db_session: AsyncSession, user: User):
     plan = Plan(owner_id=user.id, name="First", description=None)
-    db_session.add_all([plan])
+    db_session.add(plan)
     await db_session.flush()
 
     resp = await client.post(f"/api/plan/{plan.id}/set-default")
@@ -205,10 +202,98 @@ async def test_set_unset_default_plan(
     await db_session.refresh(user)
     assert user.default_plan_id == plan.id
 
-    resp = await client.get(f"/api/plan/{plan.id}/unset-default")
+    resp = await client.post(f"/api/plan/{plan.id}/unset-default")
     assert resp.status_code == 200
-    assert resp.json()["is_default"] is None
+    assert resp.json()["is_default"] is False
 
+    await db_session.refresh(user)
+    assert user.default_plan_id is None
+
+
+async def test_set_default_unsets_previous(
+    client: AsyncClient, db_session: AsyncSession, user: User
+):
+    first = Plan(owner_id=user.id, name="First", description=None)
+    second = Plan(owner_id=user.id, name="Second", description=None)
+    db_session.add_all([first, second])
+    await db_session.flush()
+
+    await client.post(f"/api/plan/{first.id}/set-default")
+    resp = await client.post(f"/api/plan/{second.id}/set-default")
+
+    assert resp.status_code == 200
+    assert resp.json()["is_default"] is True
+
+    check_first = await client.get(f"/api/plan/{first.id}")
+    assert check_first.json()["is_default"] is False
+
+
+async def test_recipient_can_set_shared_plan_as_default(
+    client: AsyncClient, db_session: AsyncSession, user: User, other_user: User
+):
+    plan = Plan(owner_id=other_user.id, name="Shared plan", description=None)
+    db_session.add(plan)
+    await db_session.flush()
+    db_session.add(
+        PlanShare(
+            plan_id=plan.id,
+            owner_id=other_user.id,
+            shared_with_user_id=user.id,
+            status=PlanShareStatus.ACCEPTED,
+        )
+    )
+    await db_session.flush()
+
+    resp = await client.post(f"/api/plan/{plan.id}/set-default")
+    assert resp.status_code == 200
+    assert resp.json()["is_default"] is True
+
+
+async def test_set_default_not_accessible_plan_returns_not_found(
+    client: AsyncClient, db_session: AsyncSession, other_user: User
+):
+    plan = Plan(owner_id=other_user.id, name="Not yours", description=None)
+    db_session.add(plan)
+    await db_session.flush()
+
+    resp = await client.post(f"/api/plan/{plan.id}/set-default")
+    assert resp.status_code == 404
+
+
+async def test_unset_default_when_not_current_default_is_conflict(
+    client: AsyncClient, db_session: AsyncSession, user: User
+):
+    plan = Plan(owner_id=user.id, name="Not default", description=None)
+    db_session.add(plan)
+    await db_session.flush()
+
+    resp = await client.post(f"/api/plan/{plan.id}/unset-default")
+    assert resp.status_code == 409
+
+
+async def test_revoking_share_clears_recipients_default(
+    client: AsyncClient, app: FastAPI, db_session: AsyncSession, user: User, other_user: User
+):
+    plan = Plan(owner_id=other_user.id, name="Shared plan", description=None)
+    db_session.add(plan)
+    await db_session.flush()
+    share = PlanShare(
+        plan_id=plan.id,
+        owner_id=other_user.id,
+        shared_with_user_id=user.id,
+        status=PlanShareStatus.ACCEPTED,
+    )
+    db_session.add(share)
+    await db_session.flush()
+
+    await client.post(f"/api/plan/{plan.id}/set-default")
+
+    app.dependency_overrides[get_current_user_id] = lambda: other_user.id
+    resp = await client.post(f"/api/plan-share/{share.id}/revoke")
+    assert resp.status_code == 200
+
+    await db_session.refresh(user)
+    assert user.default_plan_id is None
 
 
 async def test_plan_endpoints_require_auth(app: FastAPI):

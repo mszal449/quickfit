@@ -32,16 +32,6 @@ async def get_workout_logs(
     return Page[WorkoutLogOut](items=logs, total=len(logs))
 
 
-@router.get("/last", response_model=WorkoutLogOut)
-async def get_last_workout_log(
-    user_id: CurrentUserId,
-    db: DbSession,
-    plan_session_id: UUID | None = Query(default=None),
-    plan_id: UUID | None = Query(default=None),
-) -> WorkoutLogOut:
-    return await service.get_last_completed_workout_log(db, user_id, plan_session_id, plan_id)
-
-
 @router.get("/{workout_log_id}", response_model=WorkoutLogOut)
 async def get_workout_log(
     user_id: CurrentUserId, workout_log_id: UUID, db: DbSession

@@ -136,3 +136,4 @@ class WorkoutLogFilterParams(BaseModel):
         default=None, description="Filter by workout log status"
     )
     plan_id: uuid.UUID | None = Field(default=None, description="Filter by plan")
+    plan_session_id: uuid.UUID | None = Field(default=None, description="Filter by plan session")

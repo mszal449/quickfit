@@ -31,6 +31,17 @@ export function LogSetWidget({
 }: LogSetWidgetProps) {
   const [weight, setWeight] = useState(initialWeight);
   const [reps, setReps] = useState(initialReps);
+  const [syncedWeight, setSyncedWeight] = useState(initialWeight);
+  const [syncedReps, setSyncedReps] = useState(initialReps);
+
+  if (initialWeight !== syncedWeight) {
+    setSyncedWeight(initialWeight);
+    setWeight(initialWeight);
+  }
+  if (initialReps !== syncedReps) {
+    setSyncedReps(initialReps);
+    setReps(initialReps);
+  }
 
   const sameAsLast = () => {
     if (previous?.weight != null) setWeight(previous.weight);

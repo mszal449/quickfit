@@ -26,7 +26,6 @@ import type {
 
 import type {
   AddSetRequest,
-  GetLastWorkoutLogGetParams,
   GetWorkoutLogsGetParams,
   HTTPValidationError,
   PageWorkoutLogOut,
@@ -202,99 +201,6 @@ export const useCreateWorkoutLogPost = <TError = HTTPValidationError,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * @summary Get Last Workout Log
- */
-export const getLastWorkoutLogGet = (
-    params?: GetLastWorkoutLogGetParams,
- options?: SecondParameter<typeof customFetch>,signal?: AbortSignal
-) => {
-      
-      
-      return customFetch<WorkoutLogOut>(
-      {url: `/api/workout-log/last`, method: 'GET',
-        params, signal
-    },
-      options);
-    }
-  
-
-
-
-export const getGetLastWorkoutLogGetQueryKey = (params?: GetLastWorkoutLogGetParams,) => {
-    return [
-    `/api/workout-log/last`, ...(params ? [params]: [])
-    ] as const;
-    }
-
-    
-export const getGetLastWorkoutLogGetQueryOptions = <TData = Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError = HTTPValidationError>(params?: GetLastWorkoutLogGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetLastWorkoutLogGetQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLastWorkoutLogGet>>> = ({ signal }) => getLastWorkoutLogGet(params, requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetLastWorkoutLogGetQueryResult = NonNullable<Awaited<ReturnType<typeof getLastWorkoutLogGet>>>
-export type GetLastWorkoutLogGetQueryError = HTTPValidationError
-
-
-export function useGetLastWorkoutLogGet<TData = Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError = HTTPValidationError>(
- params: undefined |  GetLastWorkoutLogGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getLastWorkoutLogGet>>,
-          TError,
-          Awaited<ReturnType<typeof getLastWorkoutLogGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetLastWorkoutLogGet<TData = Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError = HTTPValidationError>(
- params?: GetLastWorkoutLogGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getLastWorkoutLogGet>>,
-          TError,
-          Awaited<ReturnType<typeof getLastWorkoutLogGet>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetLastWorkoutLogGet<TData = Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError = HTTPValidationError>(
- params?: GetLastWorkoutLogGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Get Last Workout Log
- */
-
-export function useGetLastWorkoutLogGet<TData = Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError = HTTPValidationError>(
- params?: GetLastWorkoutLogGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getLastWorkoutLogGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getGetLastWorkoutLogGetQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-/**
  * @summary Get Workout Log
  */
 export const getWorkoutLogGet = (

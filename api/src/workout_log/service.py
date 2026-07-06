@@ -71,37 +71,12 @@ async def list_user_workout_logs(
         query = query.where(WorkoutLog.status == filters.status)
     if filters.plan_id is not None:
         query = query.where(WorkoutLog.plan_id == filters.plan_id)
+    if filters.plan_session_id is not None:
+        query = query.where(WorkoutLog.plan_session_id == filters.plan_session_id)
     req = await db.execute(
         query.options(selectinload(WorkoutLog.sets)).order_by(WorkoutLog.started_at.desc())
     )
     return [WorkoutLogOut.model_validate(w) for w in req.scalars().all()]
-
-
-async def get_last_completed_workout_log(
-    db: AsyncSession,
-    user_id: UUID,
-    plan_session_id: UUID | None,
-    plan_id: UUID | None,
-) -> WorkoutLogOut:
-    query = select(WorkoutLog).where(
-        WorkoutLog.user_id == user_id, WorkoutLog.status == WorkoutLogStatus.COMPLETED
-    )
-    if plan_session_id is not None:
-        query = query.where(WorkoutLog.plan_session_id == plan_session_id)
-    if plan_id is not None:
-        query = query.where(WorkoutLog.plan_id == plan_id)
-    req = await db.execute(
-        query.options(selectinload(WorkoutLog.sets)).order_by(WorkoutLog.started_at.desc()).limit(1)
-    )
-    log = req.scalar_one_or_none()
-    if log is None:
-        LOG.warning(
-            "workout_log_last_not_found",
-            user_id=str(user_id),
-            plan_session_id=str(plan_session_id) if plan_session_id else None,
-        )
-        raise NotFoundError("No completed workout log found")
-    return WorkoutLogOut.model_validate(log)
 
 
 async def get_workout_log(db: AsyncSession, user_id: UUID, workout_log_id: UUID) -> WorkoutLogOut:
@@ -258,9 +233,11 @@ async def remove_set(db: AsyncSession, user_id: UUID, workout_log_id: UUID, set_
         .order_by(SetLog.set_index)
     )
     remaining_sets = remaining.scalars().all()
-    for offset_index, set_log in enumerate(remaining_sets):
-        set_log.set_index = len(remaining_sets) + offset_index
-    await db.flush()
+    if remaining_sets:
+        temp_base = max(s.set_index for s in remaining_sets) + 1
+        for offset_index, set_log in enumerate(remaining_sets):
+            set_log.set_index = temp_base + offset_index
+        await db.flush()
     for index, set_log in enumerate(remaining_sets):
         set_log.set_index = index
     await db.flush()

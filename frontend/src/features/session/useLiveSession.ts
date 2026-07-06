@@ -1,13 +1,16 @@
 import { useMemo } from "react";
 import {
-  useGetLastWorkoutLogGet,
+  useGetWorkoutLogsGet,
   useGetWorkoutLogGet,
 } from "../../api/generated/workout-log/workout-log";
 import { useGetSessionGet } from "../../api/generated/plan-session/plan-session";
 import { useGetPlanGet } from "../../api/generated/plan/plan";
+import { WorkoutLogStatus } from "../../api/generated/quickfitApi.schemas";
 import { useExerciseNames } from "../exercises/useEcerciseName";
 import { buildLiveModel } from "./buildLiveModel";
 import type { LiveSessionModel } from "./types";
+
+const RECENT_LOGS_COUNT = 3;
 
 export function useLiveSession(workoutLogId: string) {
   const logQuery = useGetWorkoutLogGet(workoutLogId, {
@@ -23,11 +26,16 @@ export function useLiveSession(workoutLogId: string) {
   const planQuery = useGetPlanGet(planId, {
     query: { enabled: !!planId },
   });
-  const lastQuery = useGetLastWorkoutLogGet(
-    { plan_session_id: sessionId },
-    { query: { enabled: !!sessionId, retry: false } },
+  const recentLogsQuery = useGetWorkoutLogsGet(
+    { plan_session_id: sessionId, status: WorkoutLogStatus.completed },
+    { query: { enabled: !!sessionId } },
   );
   const { namesById } = useExerciseNames();
+
+  const recentLogs = useMemo(
+    () => (recentLogsQuery.data?.items ?? []).slice(0, RECENT_LOGS_COUNT),
+    [recentLogsQuery.data],
+  );
 
   const model: LiveSessionModel | null = useMemo(() => {
     if (!log || !sessionQuery.data || !planQuery.data) return null;
@@ -35,16 +43,16 @@ export function useLiveSession(workoutLogId: string) {
       log,
       sessionQuery.data,
       planQuery.data.name,
-      lastQuery.data ?? null,
+      recentLogs,
       namesById,
     );
-  }, [log, sessionQuery.data, planQuery.data, lastQuery.data, namesById]);
+  }, [log, sessionQuery.data, planQuery.data, recentLogs, namesById]);
 
   const isLoading =
     logQuery.isLoading ||
     sessionQuery.isLoading ||
     planQuery.isLoading ||
-    (!!sessionId && lastQuery.isLoading);
+    (!!sessionId && recentLogsQuery.isLoading);
 
   return { model, isLoading, isError: logQuery.isError };
 }

@@ -1,12 +1,11 @@
-from email.policy import default
 from uuid import UUID
 
-from sqlalchemy import exists, or_, select, update
+from sqlalchemy import exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from structlog import get_logger
 
-from common.exceptions import ForbiddenError, NotFoundError
+from common.exceptions import ConflictError, NotFoundError
 from models.plan import Plan
 from models.plan_share import PlanShare, PlanShareStatus
 from models.user import User
@@ -113,34 +112,28 @@ async def update_plan(
 
 
 async def set_default_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> PlanOut:
-    req = await db.execute(
-        update(User.default_plan_id).where(User.id == user_id).values(default_plan_id=plan_id)
-    )
-    plan = req.scalar_one_or_none()
-    if plan is None:
-        LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
-        raise NotFoundError("Plan not found")
-    return _to_plan_out(plan, plan.id)
+    await get_plan(db, plan_id, user_id)
+    user = await User.get(db, user_id)
+    if user is None:
+        LOG.warning("user_not_found", user_id=str(user_id))
+        raise NotFoundError("User not found")
+    user.default_plan_id = plan_id
+    await db.flush()
+    LOG.info("plan_set_default", plan_id=str(plan_id), user_id=str(user_id))
+    return await get_plan(db, plan_id, user_id)
 
 
 async def unset_default_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> PlanOut:
-    cur_default = await _get_default_plan(db, user_id)
-    if plan_id != cur_default:
-        LOG.warning(
-            "default_plan_unset_forbidden",
-            plan_id=plan_id,
-            default_plan_id=cur_default,
-            user_id=user_id,
-        )
-        raise ForbiddenError("Only the current default plan can be unset")
-    req = await db.execute(
-        update(User.default_plan_id).where(User.id == user_id).values(default_plan_id=None)
-    )
-    plan = req.scalar_one_or_none()
-    if plan is None:
-        LOG.warning("plan_not_found", plan_id=str(plan_id), user_id=str(user_id))
-        raise NotFoundError("Plan not found")
-    return _to_plan_out(plan, None)
+    user = await User.get(db, user_id)
+    if user is None:
+        LOG.warning("user_not_found", user_id=str(user_id))
+        raise NotFoundError("User not found")
+    if user.default_plan_id != plan_id:
+        raise ConflictError("This plan is not your default")
+    user.default_plan_id = None
+    await db.flush()
+    LOG.info("plan_unset_default", plan_id=str(plan_id), user_id=str(user_id))
+    return await get_plan(db, plan_id, user_id)
 
 
 async def delete_plan(db: AsyncSession, user_id: UUID, plan_id: UUID) -> None:

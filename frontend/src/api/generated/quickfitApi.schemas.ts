@@ -631,11 +631,10 @@ status?: WorkoutLogStatus | null;
  * Filter by plan
  */
 plan_id?: string | null;
-};
-
-export type GetLastWorkoutLogGetParams = {
+/**
+ * Filter by plan session
+ */
 plan_session_id?: string | null;
-plan_id?: string | null;
 };
 
 export type GetFriendshipsGetParams = {

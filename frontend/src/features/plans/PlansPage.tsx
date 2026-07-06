@@ -15,7 +15,8 @@ import { useCurrentUser } from "../../auth/useCurrentUser";
 import {
   useCreatePlanPost,
   useDeletePlanDelete,
-  useUpdatePlanPatch,
+  useSetDefaultPlanPost,
+  useUnsetDefaultPlanPost,
   getGetPlansGetQueryKey,
 } from "../../api/generated/plan/plan";
 import {
@@ -136,17 +137,33 @@ export function PlansPage() {
     },
   });
 
-  const updatePlan = useUpdatePlanPatch({
+  const setDefaultPlan = useSetDefaultPlanPost({
     mutation: {
-      onSuccess: (plan) => {
-        toast.success(
-          plan.is_default ? "Set as default plan" : "Removed as default plan",
-        );
+      onSuccess: () => {
+        toast.success("Set as default plan");
         queryClient.invalidateQueries({ queryKey: getGetPlansGetQueryKey() });
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     },
   });
+
+  const unsetDefaultPlan = useUnsetDefaultPlanPost({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Removed as default plan");
+        queryClient.invalidateQueries({ queryKey: getGetPlansGetQueryKey() });
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    },
+  });
+
+  const toggleDefault = (plan: { id: string; is_default: boolean }) => {
+    if (plan.is_default) {
+      unsetDefaultPlan.mutate({ planId: plan.id });
+    } else {
+      setDefaultPlan.mutate({ planId: plan.id });
+    }
+  };
 
   const handleCreate = (values: PlanFormValues) => {
     createPlan.mutate({
@@ -225,12 +242,7 @@ export function PlansPage() {
                   key={plan.id}
                   plan={plan}
                   onDelete={() => setDeleting(plan)}
-                  onSetDefault={() =>
-                    updatePlan.mutate({
-                      planId: plan.id,
-                      data: { is_default: !plan.is_default },
-                    })
-                  }
+                  onSetDefault={() => toggleDefault(plan)}
                 />
               ))}
             </div>
@@ -310,6 +322,7 @@ export function PlansPage() {
                     onLeave={
                       shareId ? () => setLeavingShareId(shareId) : undefined
                     }
+                    onSetDefault={() => toggleDefault(plan)}
                   />
                 );
               })}

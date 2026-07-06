@@ -15,15 +15,17 @@ export function buildLiveModel(
   workoutLog: WorkoutLogOut,
   session: PlanSessionOut,
   planName: string,
-  previousLog: WorkoutLogOut | null,
+  recentLogs: WorkoutLogOut[],
   namesById: Map<string, string>,
 ): LiveSessionModel {
   const previousByKey = new Map<string, LivePrevious>();
-  for (const s of previousLog?.sets ?? []) {
-    previousByKey.set(`${s.exercise_id}:${s.set_index}`, {
-      weight: s.weight,
-      reps: s.reps,
-    });
+  for (const log of [...recentLogs].reverse()) {
+    for (const s of log.sets) {
+      previousByKey.set(`${s.exercise_id}:${s.set_index}`, {
+        weight: s.weight,
+        reps: s.reps,
+      });
+    }
   }
 
   const exercises: LiveExercise[] = session.prescription.exercises.map(
