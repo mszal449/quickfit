@@ -22,6 +22,7 @@ class User(BaseModel):
     __tablename__ = "users"
 
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[UserRole] = mapped_column(SAEnum(UserRole), default=UserRole.USER)
     is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     default_plan_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -48,7 +49,9 @@ class AuthIdentity(BaseModel):
     __tablename__ = "auth_identities"
     __table_args__ = (UniqueConstraint("provider", "provider_account_id"),)
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     provider: Mapped[AuthProvider] = mapped_column(
         SAEnum(AuthProvider), default=AuthProvider.GOOGLE
     )

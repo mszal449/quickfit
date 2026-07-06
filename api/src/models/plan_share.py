@@ -28,8 +28,12 @@ class PlanShare(BaseModel):
     )
 
     plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), index=True)
-    owner_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
-    shared_with_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    shared_with_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     status: Mapped[PlanShareStatus] = mapped_column(
         SAEnum(PlanShareStatus), default=PlanShareStatus.PENDING
     )

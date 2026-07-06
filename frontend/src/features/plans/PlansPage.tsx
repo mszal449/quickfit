@@ -89,6 +89,18 @@ export function PlansPage() {
     }
     return map;
   }, [allSharesPage, currentUser]);
+  const ownerEmailByPlanId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const s of allSharesPage?.items ?? []) {
+      if (
+        s.status === PlanShareStatus.accepted &&
+        s.owner_id !== currentUser?.id
+      ) {
+        map.set(s.plan_id, s.user.email);
+      }
+    }
+    return map;
+  }, [allSharesPage, currentUser]);
 
   const invalidateShares = () =>
     queryClient.invalidateQueries({ queryKey: getGetPlanSharesGetQueryKey() });
@@ -262,7 +274,7 @@ export function PlansPage() {
                     className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
                   >
                     <div className="min-w-0 flex-1 truncate text-sm font-semibold">
-                      {share.user.email} shared a plan with you
+                      {share.user.email} shared "{share.plan_name}" with you
                     </div>
                     <div className="flex gap-2 sm:shrink-0">
                       <Button
@@ -323,6 +335,7 @@ export function PlansPage() {
                       shareId ? () => setLeavingShareId(shareId) : undefined
                     }
                     onSetDefault={() => toggleDefault(plan)}
+                    sharedByEmail={ownerEmailByPlanId.get(plan.id)}
                   />
                 );
               })}

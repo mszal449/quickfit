@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Card } from "../../components/ui/Card";
@@ -63,26 +64,14 @@ export function HistoryPage() {
           {history.map((w) => (
             <li key={w.id}>
               <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-fg min-w-0 flex-1 truncate font-semibold">
-                      {w.plan_name ? `${w.plan_name} · ` : ""}
-                      {w.session_name ?? "Freestyle session"}
-                    </h2>
-                    <Menu
-                      className="-mr-1 shrink-0"
-                      label={`Actions for ${w.session_name ?? "workout"}`}
-                      trigger={<MoreIcon size={18} />}
-                      items={[
-                        {
-                          label: "Delete workout",
-                          icon: <CloseIcon size={16} />,
-                          destructive: true,
-                          onSelect: () => setDeleting(w),
-                        },
-                      ]}
-                    />
-                  </div>
+                <Link
+                  to={`/history/${w.id}`}
+                  className="group min-w-0 flex-1 focus:outline-none"
+                >
+                  <h2 className="text-fg group-hover:text-primary truncate font-semibold transition-colors">
+                    {w.plan_name ? `${w.plan_name} · ` : ""}
+                    {w.session_name ?? "Freestyle session"}
+                  </h2>
                   <div className="text-faint mt-0.5 font-mono text-xs">
                     {relativeTime(w.started_at)}
                   </div>
@@ -93,9 +82,9 @@ export function HistoryPage() {
                       </Tag>
                     ))}
                   </div>
-                </div>
+                </Link>
 
-                <div className="border-border flex shrink-0 gap-5 border-t pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
+                <div className="border-border flex shrink-0 items-center gap-5 border-t pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
                   <Metric
                     value={
                       w.duration_seconds != null
@@ -109,6 +98,19 @@ export function HistoryPage() {
                     value={`${formatTonnes(w.total_volume_kg)}t`}
                     label="volume"
                     accent
+                  />
+                  <Menu
+                    className="-mr-1 shrink-0"
+                    label={`Actions for ${w.session_name ?? "workout"}`}
+                    trigger={<MoreIcon size={18} />}
+                    items={[
+                      {
+                        label: "Delete workout",
+                        icon: <CloseIcon size={16} />,
+                        destructive: true,
+                        onSelect: () => setDeleting(w),
+                      },
+                    ]}
                   />
                 </div>
               </Card>

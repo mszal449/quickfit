@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -52,8 +52,32 @@ const MUSCLE_GROUP_LABELS: Record<string, string> = {
 type CategoryFilter = "all" | ExerciseCategory;
 
 export function ExercisesPage() {
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") ?? "";
+  const categoryFilter = (searchParams.get("category") ??
+    "all") as CategoryFilter;
+  const setSearch = (value: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value) next.set("q", value);
+        else next.delete("q");
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const setCategoryFilter = (value: CategoryFilter) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value !== "all") next.set("category", value);
+        else next.delete("category");
+        return next;
+      },
+      { replace: true },
+    );
+  };
   const [editing, setEditing] = useState<ExerciseOut | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<ExerciseOut | null>(null);
@@ -175,52 +199,60 @@ export function ExercisesPage() {
         </Card>
       ) : (
         <Card className="divide-border divide-y overflow-hidden p-0">
-          {filtered.map((ex) => (
-            <div
-              key={ex.id}
-              className="hover:bg-surface-2 flex items-center gap-3 px-4 py-3 transition-colors"
-            >
-              <Link
-                to={`/exercises/${ex.id}`}
-                className="group min-w-0 flex-1 focus:outline-none"
+          {filtered.map((ex) => {
+            const isGlobal = ex.owner_id === null;
+            return (
+              <div
+                key={ex.id}
+                className="hover:bg-surface-2 flex items-center gap-3 px-4 py-3 transition-colors"
               >
-                <div className="text-fg group-hover:text-primary truncate font-semibold transition-colors">
-                  {ex.name}
-                </div>
-                {ex.description && (
-                  <div className="text-faint truncate text-sm">
-                    {ex.description}
+                <Link
+                  to={`/exercises/${ex.id}`}
+                  className="group min-w-0 flex-1 focus:outline-none"
+                >
+                  <div className="text-fg group-hover:text-primary truncate font-semibold transition-colors">
+                    {ex.name}
                   </div>
+                  {ex.description && (
+                    <div className="text-faint truncate text-sm">
+                      {ex.description}
+                    </div>
+                  )}
+                </Link>
+                <Tag tone="muted">{isGlobal ? "Global" : "Custom"}</Tag>
+                <Tag
+                  tone={
+                    ex.category === ExerciseCategory.cardio
+                      ? "primary"
+                      : "muted"
+                  }
+                >
+                  {ex.muscle_group
+                    ? MUSCLE_GROUP_LABELS[ex.muscle_group]
+                    : "Cardio"}
+                </Tag>
+                {!isGlobal && (
+                  <Menu
+                    trigger={<MoreIcon size={18} />}
+                    label={`Actions for ${ex.name}`}
+                    items={[
+                      {
+                        label: "Edit",
+                        icon: <PencilIcon size={16} />,
+                        onSelect: () => setEditing(ex),
+                      },
+                      {
+                        label: "Archive",
+                        icon: <CloseIcon size={16} />,
+                        destructive: true,
+                        onSelect: () => setDeleting(ex),
+                      },
+                    ]}
+                  />
                 )}
-              </Link>
-              <Tag
-                tone={
-                  ex.category === ExerciseCategory.cardio ? "primary" : "muted"
-                }
-              >
-                {ex.muscle_group
-                  ? MUSCLE_GROUP_LABELS[ex.muscle_group]
-                  : "Cardio"}
-              </Tag>
-              <Menu
-                trigger={<MoreIcon size={18} />}
-                label={`Actions for ${ex.name}`}
-                items={[
-                  {
-                    label: "Edit",
-                    icon: <PencilIcon size={16} />,
-                    onSelect: () => setEditing(ex),
-                  },
-                  {
-                    label: "Archive",
-                    icon: <CloseIcon size={16} />,
-                    destructive: true,
-                    onSelect: () => setDeleting(ex),
-                  },
-                ]}
-              />
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </Card>
       )}
 

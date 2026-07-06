@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from structlog import get_logger
@@ -31,7 +31,10 @@ async def _get_owned_exercise(db: AsyncSession, user_id: UUID, exercise_id: UUID
 async def list_user_exercises(db: AsyncSession, user_id: UUID) -> list[ExerciseOut]:
     req = await db.execute(
         select(Exercise)
-        .where(Exercise.owner_id == user_id, Exercise.is_archived.is_(False))
+        .where(
+            or_(Exercise.owner_id == user_id, Exercise.owner_id.is_(None)),
+            Exercise.is_archived.is_(False),
+        )
         .order_by(Exercise.name)
     )
     return [ExerciseOut.model_validate(e) for e in req.scalars().all()]

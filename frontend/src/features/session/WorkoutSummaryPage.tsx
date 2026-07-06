@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
 import { Tag } from "../../components/ui/Tag";
 import { TrophyIcon, CheckIcon } from "../../components/icons";
@@ -18,6 +18,7 @@ interface SummaryLocationState {
 export function WorkoutSummaryPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { sessionId: workoutLogId = "" } = useParams();
   const summary =
     (location.state as SummaryLocationState | null)?.summary ?? null;
 
@@ -134,6 +135,15 @@ export function WorkoutSummaryPage() {
           onClick={() => navigate("/dashboard")}
         >
           Done
+        </Button>
+        <Button
+          variant="secondary"
+          size="lg"
+          fullWidth
+          className="mt-3"
+          onClick={() => navigate(`/history/${workoutLogId}`)}
+        >
+          View full workout
         </Button>
       </main>
     </div>

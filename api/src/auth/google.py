@@ -16,7 +16,7 @@ def build_google_auth_url(state: str) -> str:
         "client_id": cfg.google_client_id,
         "redirect_uri": cfg.google_redirect_uri,
         "response_type": "code",
-        "scope": "openid email",
+        "scope": "openid email profile",
         "state": state,
     }
     return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"

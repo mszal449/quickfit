@@ -60,7 +60,7 @@ export function DashboardPage() {
   const activeLog = workout?.items[0] ?? null;
   const active = activeLog ? toActiveSession(activeLog, allPlans) : null;
 
-  const defaultPlanId = plans.find((p) => p.is_default)?.id ?? null;
+  const defaultPlanId = allPlans.find((p) => p.is_default)?.id ?? null;
   const startGroups = orderStartGroups(
     buildStartOptions(plans, namesById, completedLogs),
     buildStartOptions(sharedPlans, namesById, completedLogs, true),
@@ -81,7 +81,8 @@ export function DashboardPage() {
     [completedLogs, namesById],
   );
 
-  const greetingName = user?.email.split("@")[0] ?? "";
+  const greetingName =
+    user?.name?.split(" ")[0] || user?.email.split("@")[0] || "";
 
   const resume = () => {
     if (active) navigate(`/session/${active.workout_log_id}`);

@@ -5,14 +5,18 @@ from fastapi import Response
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from structlog import get_logger
 
 from auth.google import exchange_code_for_token, fetch_google_user
 from auth.schemas import GoogleUserInfo
 from auth.security import create_access_token, create_refresh_token, hash_token
 from common.exceptions import ConflictError
 from config.service import get_config
+from models.plan import Plan
 from models.refresh_token import RefreshToken
 from models.user import AuthIdentity, AuthProvider, User
+
+LOG = get_logger()
 
 
 async def find_or_create_user(db: AsyncSession, info: GoogleUserInfo) -> User:
@@ -26,6 +30,9 @@ async def find_or_create_user(db: AsyncSession, info: GoogleUserInfo) -> User:
     )
     identity = res_id.scalar_one_or_none()
     if identity:
+        if info.name and identity.user.name != info.name:
+            identity.user.name = info.name
+            await db.flush()
         return identity.user
 
     res_user = await db.execute(select(User).where(User.email == info.email))
@@ -34,8 +41,10 @@ async def find_or_create_user(db: AsyncSession, info: GoogleUserInfo) -> User:
         if not (existing.is_email_verified and info.email_verified):
             raise ConflictError("Email already registered")
         user = existing
+        if info.name and user.name != info.name:
+            user.name = info.name
     else:
-        user = User(email=info.email, is_email_verified=info.email_verified)
+        user = User(email=info.email, is_email_verified=info.email_verified, name=info.name)
         db.add(user)
         await db.flush()
 
@@ -112,3 +121,20 @@ async def revoke_all_user_tokens(db: AsyncSession, user_id: uuid.UUID) -> None:
     await db.execute(
         update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=True)
     )
+
+
+async def delete_user(db: AsyncSession, user_id: uuid.UUID) -> None:
+    owned_plans_req = await db.execute(
+        select(Plan)
+        .where(Plan.owner_id == user_id)
+        .options(selectinload(Plan.sessions), selectinload(Plan.shares))
+    )
+    for plan in owned_plans_req.scalars().all():
+        await db.delete(plan)
+
+    user = await User.get(db, user_id)
+    if user is None:
+        return
+    await db.delete(user)
+    await db.flush()
+    LOG.info("user_deleted", user_id=str(user_id))

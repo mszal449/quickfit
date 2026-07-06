@@ -130,6 +130,67 @@ export function useMeGet<TData = Awaited<ReturnType<typeof meGet>>, TError = unk
 
 
 /**
+ * @summary Delete Me
+ */
+export const deleteMeDelete = (
+    
+ options?: SecondParameter<typeof customFetch>,) => {
+      
+      
+      return customFetch<void>(
+      {url: `/api/auth/me`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteMeDeleteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMeDelete>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMeDelete>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteMeDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMeDelete>>, void> = () => {
+          
+
+          return  deleteMeDelete(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMeDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMeDelete>>>
+    
+    export type DeleteMeDeleteMutationError = unknown
+
+    /**
+ * @summary Delete Me
+ */
+export const useDeleteMeDelete = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMeDelete>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMeDelete>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteMeDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Google Login
  */
 export const googleLoginGet = (

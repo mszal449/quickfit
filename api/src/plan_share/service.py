@@ -9,6 +9,7 @@ from structlog import get_logger
 from common.db import integrity_error_constraint
 from common.exceptions import ConflictError, ForbiddenError, NotFoundError
 from models.friendship import Friendship, FriendshipStatus
+from models.plan import Plan
 from models.plan_share import PlanShare, PlanShareStatus
 from models.user import User
 from models.workout_log import WorkoutLog
@@ -32,10 +33,11 @@ def _other_user_id(share: PlanShare, user_id: UUID) -> UUID:
     return share.owner_id
 
 
-def _to_plan_share_out(share: PlanShare, other_user: User) -> PlanShareOut:
+def _to_plan_share_out(share: PlanShare, other_user: User, plan_name: str) -> PlanShareOut:
     return PlanShareOut(
         id=share.id,
         plan_id=share.plan_id,
+        plan_name=plan_name,
         owner_id=share.owner_id,
         shared_with_user_id=share.shared_with_user_id,
         status=share.status,
@@ -43,6 +45,13 @@ def _to_plan_share_out(share: PlanShare, other_user: User) -> PlanShareOut:
         updated_at=share.updated_at,
         user=PlanShareUserOut.model_validate(other_user),
     )
+
+
+async def _get_plan_name(db: AsyncSession, plan_id: UUID) -> str:
+    name = await db.scalar(select(Plan.name).where(Plan.id == plan_id))
+    if name is None:
+        raise NotFoundError("Plan not found")
+    return name
 
 
 async def _get_related_plan_share(
@@ -97,13 +106,22 @@ async def list_plan_shares(
     users_req = await db.execute(select(User).where(User.id.in_(other_ids)))
     users_by_id = {u.id: u for u in users_req.scalars().all()}
 
-    return [_to_plan_share_out(s, users_by_id[_other_user_id(s, user_id)]) for s in shares]
+    plan_ids = {s.plan_id for s in shares}
+    plans_req = await db.execute(select(Plan.id, Plan.name).where(Plan.id.in_(plan_ids)))
+    plan_name_by_id = {plan_id: name for plan_id, name in plans_req.all()}
+
+    return [
+        _to_plan_share_out(
+            s, users_by_id[_other_user_id(s, user_id)], plan_name_by_id[s.plan_id]
+        )
+        for s in shares
+    ]
 
 
 async def create_plan_share(
     db: AsyncSession, user_id: UUID, payload: PlanShareCreate
 ) -> PlanShareOut:
-    await get_owned_plan(db, payload.plan_id, user_id)
+    plan = await get_owned_plan(db, payload.plan_id, user_id)
 
     target = await User.get(db, payload.shared_with_user_id)
     if target is None:
@@ -127,7 +145,7 @@ async def create_plan_share(
         await db.flush()
         await db.refresh(existing)
         LOG.info("plan_share_reactivated", plan_share_id=str(existing.id), user_id=str(user_id))
-        return _to_plan_share_out(existing, target)
+        return _to_plan_share_out(existing, target, plan.name)
 
     share = PlanShare(plan_id=payload.plan_id, owner_id=user_id, shared_with_user_id=target.id)
     db.add(share)
@@ -141,7 +159,7 @@ async def create_plan_share(
         raise ConflictError("Plan already shared with this user") from None
     await db.refresh(share)
     LOG.info("plan_share_created", plan_share_id=str(share.id), user_id=str(user_id))
-    return _to_plan_share_out(share, target)
+    return _to_plan_share_out(share, target, plan.name)
 
 
 async def accept_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID) -> PlanShareOut:
@@ -162,7 +180,7 @@ async def accept_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID
     share.status = PlanShareStatus.ACCEPTED
     await db.flush()
     LOG.info("plan_share_accepted", plan_share_id=str(plan_share_id), user_id=str(user_id))
-    return _to_plan_share_out(share, owner)
+    return _to_plan_share_out(share, owner, await _get_plan_name(db, share.plan_id))
 
 
 async def revoke_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID) -> PlanShareOut:
@@ -185,7 +203,7 @@ async def revoke_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID
 
     await db.flush()
     LOG.info("plan_share_revoked", plan_share_id=str(plan_share_id), user_id=str(user_id))
-    return _to_plan_share_out(share, recipient)
+    return _to_plan_share_out(share, recipient, await _get_plan_name(db, share.plan_id))
 
 
 async def remove_plan_share(db: AsyncSession, user_id: UUID, plan_share_id: UUID) -> None:

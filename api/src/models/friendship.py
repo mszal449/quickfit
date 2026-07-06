@@ -21,8 +21,12 @@ class Friendship(BaseModel):
         CheckConstraint("requester_id != addressee_id", name="ck_friendships_no_self_friend"),
     )
 
-    requester_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
-    addressee_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    requester_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    addressee_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     status: Mapped[FriendshipStatus] = mapped_column(
         SAEnum(FriendshipStatus), default=FriendshipStatus.PENDING
     )

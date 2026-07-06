@@ -81,13 +81,15 @@ export interface ExerciseLogEntry {
   sets: SetLogEntry[];
 }
 
+export type ExerciseOutOwnerId = string | null;
+
 export type ExerciseOutDescription = string | null;
 
 export type ExerciseOutMuscleGroup = MuscleGroup | null;
 
 export interface ExerciseOut {
   id: string;
-  owner_id: string;
+  owner_id: ExerciseOutOwnerId;
   name: string;
   description: ExerciseOutDescription;
   category: ExerciseCategory;
@@ -143,9 +145,12 @@ export interface FriendRequestCreate {
   email: string;
 }
 
+export type FriendUserOutName = string | null;
+
 export interface FriendUserOut {
   id: string;
   email: string;
+  name: FriendUserOutName;
 }
 
 export interface FriendshipOut {
@@ -284,6 +289,7 @@ export interface PlanShareCreate {
 export interface PlanShareOut {
   id: string;
   plan_id: string;
+  plan_name: string;
   owner_id: string;
   shared_with_user_id: string;
   status: PlanShareStatus;
@@ -467,11 +473,14 @@ export interface SetPrescription {
   max_reps?: SetPrescriptionMaxReps;
 }
 
+export type UserOutName = string | null;
+
 export type UserOutLastLoginAt = string | null;
 
 export interface UserOut {
   id: string;
   email: string;
+  name: UserOutName;
   role: UserRole;
   is_email_verified: boolean;
   created_at: string;

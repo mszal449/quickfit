@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Modal } from "../../../components/ui/Modal";
 import { Button } from "../../../components/ui/Button";
+import { Tag } from "../../../components/ui/Tag";
 import { PlusIcon, SearchIcon } from "../../../components/icons";
 import { useToast } from "../../../components/ui/useToast";
 import { getErrorMessage } from "../../../api/client";
@@ -120,8 +121,13 @@ export function ExercisePickerModal({
                     onClick={() => onPick(ex.id)}
                     className="hover:bg-surface-2 flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors"
                   >
-                    <span className="text-fg truncate font-medium">
-                      {ex.name}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="text-fg truncate font-medium">
+                        {ex.name}
+                      </span>
+                      <Tag tone="muted">
+                        {ex.owner_id === null ? "Global" : "Custom"}
+                      </Tag>
                     </span>
                     <PlusIcon size={16} className="text-faint shrink-0" />
                   </button>

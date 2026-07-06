@@ -6,22 +6,37 @@ import { PageHeader } from "../../components/layout/PageHeader";
 import { Card } from "../../components/ui/Card";
 import { SectionLabel } from "../../components/ui/SectionLabel";
 import { Skeleton } from "../../components/ui/Skeleton";
-import { Switch } from "../../components/ui/Switch";
 import { Tag } from "../../components/ui/Tag";
 import { Button } from "../../components/ui/Button";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { DownloadIcon, LogoutIcon, ShieldIcon } from "../../components/icons";
 import { formatFullDate, relativeTime } from "../../lib/format";
+import { getErrorMessage } from "../../api/client";
+import { useToast } from "../../components/ui/useToast";
+import { useDeleteMeDelete } from "../../api/generated/auth/auth";
+import { getUnits, setUnits as persistUnits, type Units } from "../../lib/preferences";
 
 export function AccountPage() {
   const { data: user, isLoading } = useCurrentUser();
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
-  const [units, setUnits] = useState<"kg" | "lb">("kg");
-  const [restSound, setRestSound] = useState(true);
+  const [units, setUnitsState] = useState<Units>(getUnits);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const setUnits = (value: Units) => {
+    setUnitsState(value);
+    persistUnits(value);
+  };
+
+  const deleteAccount = useDeleteMeDelete({
+    mutation: {
+      onSuccess: () => navigate("/"),
+      onError: (e) => toast.error(getErrorMessage(e)),
+    },
+  });
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -105,16 +120,6 @@ export function AccountPage() {
               ))}
             </div>
           </SettingRow>
-          <SettingRow
-            label="Rest timer sound"
-            description="Play a sound when rest ends"
-          >
-            <Switch
-              checked={restSound}
-              onChange={setRestSound}
-              label="Rest timer sound"
-            />
-          </SettingRow>
         </Card>
       </div>
 
@@ -184,7 +189,7 @@ export function AccountPage() {
         description="This permanently deletes your plans, exercises and workout history. This can't be undone."
         confirmLabel="Delete account"
         destructive
-        onConfirm={() => navigate("/")}
+        onConfirm={() => deleteAccount.mutate()}
         onClose={() => setConfirmDelete(false)}
       />
     </div>

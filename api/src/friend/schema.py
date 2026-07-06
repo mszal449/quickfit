@@ -15,6 +15,7 @@ class FriendUserOut(BaseModel):
 
     id: uuid.UUID
     email: str
+    name: str | None
 
 
 class FriendshipOut(BaseModel):

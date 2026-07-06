@@ -8,6 +8,7 @@ from auth.dependencies import CurrentUser
 from auth.google import build_google_auth_url
 from auth.schemas import UserOut
 from auth.service import (
+    delete_user,
     generate_token_pair,
     get_valid_refresh_token,
     handle_google_callback,
@@ -86,6 +87,14 @@ async def logout(req: Request, db: DbSession):
 @router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
 async def logout_all(user: CurrentUser, res: Response, db: DbSession):
     await revoke_all_user_tokens(db, user.id)
+    res.delete_cookie("access_token", path="/")
+    res.delete_cookie("refresh_token", path="/api/auth")
+    return res
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(user: CurrentUser, res: Response, db: DbSession):
+    await delete_user(db, user.id)
     res.delete_cookie("access_token", path="/")
     res.delete_cookie("refresh_token", path="/api/auth")
     return res

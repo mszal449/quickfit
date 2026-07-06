@@ -91,13 +91,15 @@ export function orderStartGroups(
   sharedGroups: PlanStartGroup[],
   defaultPlanId: string | null,
 ): PlanStartGroup[] {
-  const defaultGroup = ownedGroups.find((g) => g.plan_id === defaultPlanId);
+  const defaultGroup =
+    ownedGroups.find((g) => g.plan_id === defaultPlanId) ??
+    sharedGroups.find((g) => g.plan_id === defaultPlanId);
   const restOwned = ownedGroups
     .filter((g) => g.plan_id !== defaultPlanId)
     .sort((a, b) => a.plan_name.localeCompare(b.plan_name));
-  const sortedShared = [...sharedGroups].sort((a, b) =>
-    a.plan_name.localeCompare(b.plan_name),
-  );
+  const sortedShared = sharedGroups
+    .filter((g) => g.plan_id !== defaultPlanId)
+    .sort((a, b) => a.plan_name.localeCompare(b.plan_name));
 
   return [
     ...(defaultGroup ? [defaultGroup] : []),

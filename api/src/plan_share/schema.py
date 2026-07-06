@@ -21,6 +21,7 @@ class PlanShareUserOut(BaseModel):
 class PlanShareOut(BaseModel):
     id: uuid.UUID
     plan_id: uuid.UUID
+    plan_name: str
     owner_id: uuid.UUID
     shared_with_user_id: uuid.UUID
     status: PlanShareStatus

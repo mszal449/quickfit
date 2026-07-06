@@ -9,7 +9,7 @@ class ExerciseOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    owner_id: uuid.UUID
+    owner_id: uuid.UUID | None
     name: str
     description: str | None
     category: ExerciseCategory

@@ -20,6 +20,8 @@ interface PlanCardProps {
   onLeave?: () => void;
   /** Owner-only: toggle this plan as the one Dashboard defaults to. */
   onSetDefault?: () => void;
+  /** Shared-with-me only: the owner's email, shown as "Shared by ...". */
+  sharedByEmail?: string;
 }
 
 const MAX_VISIBLE_SESSIONS = 3;
@@ -31,6 +33,7 @@ export function PlanCard({
   onDelete,
   onLeave,
   onSetDefault,
+  sharedByEmail,
 }: PlanCardProps) {
   const sessionCount = plan.sessions.length;
   const visibleSessions = plan.sessions.slice(0, MAX_VISIBLE_SESSIONS);
@@ -93,6 +96,12 @@ export function PlanCard({
               </Tag>
             )}
           </div>
+
+          {sharedByEmail && (
+            <p className="text-faint mt-1 truncate text-xs">
+              Shared by {sharedByEmail}
+            </p>
+          )}
 
           <p className="text-muted mt-2 line-clamp-2 min-h-10 text-sm">
             {plan.description}

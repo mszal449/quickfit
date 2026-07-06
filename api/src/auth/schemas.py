@@ -27,6 +27,7 @@ class UserOut(BaseModel):
 
     id: uuid.UUID
     email: str
+    name: str | None
     role: UserRole
     is_email_verified: bool
     created_at: datetime
@@ -37,3 +38,4 @@ class GoogleUserInfo(BaseModel):
     sub: str
     email: str
     email_verified: bool
+    name: str | None = None

@@ -121,6 +121,9 @@ async def update_workout_log(
     db: AsyncSession, user_id: UUID, workout_log_id: UUID, payload: WorkoutLogUpdate
 ) -> WorkoutLogOut:
     log = await _get_owned_workout_log(db, user_id, workout_log_id)
+    if log.status == WorkoutLogStatus.COMPLETED and payload.model_fields_set - {"notes"}:
+        LOG.warning("workout_log_completed", workout_log_id=str(workout_log_id))
+        raise ConflictError("Cannot edit a completed workout, except notes")
 
     if payload.started_at is not None:
         log.started_at = payload.started_at

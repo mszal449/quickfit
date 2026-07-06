@@ -28,8 +28,13 @@ import {
 import {
   FriendshipStatus,
   type FriendshipOut,
+  type FriendUserOut,
 } from "../../api/generated/quickfitApi.schemas";
 import { AddFriendModal } from "./AddFriendModal";
+
+function displayName(user: FriendUserOut): string {
+  return user.name || user.email;
+}
 
 type TabId = "friends" | "requests";
 
@@ -52,7 +57,7 @@ export function FriendsPage() {
       onSuccess: (result) => {
         toast.success(
           result.status === FriendshipStatus.accepted
-            ? `You and ${result.user.email} are now friends`
+            ? `You and ${displayName(result.user)} are now friends`
             : "Friend request sent",
         );
         invalidate();
@@ -107,10 +112,10 @@ export function FriendsPage() {
 
   const removeConfirmTitle = removing
     ? removing.status === FriendshipStatus.accepted
-      ? `Remove ${removing.user.email}?`
+      ? `Remove ${displayName(removing.user)}?`
       : removing.requester_id === currentUser?.id
-        ? `Cancel request to ${removing.user.email}?`
-        : `Decline ${removing.user.email}'s request?`
+        ? `Cancel request to ${displayName(removing.user)}?`
+        : `Decline ${displayName(removing.user)}'s request?`
     : "";
 
   return (
@@ -185,9 +190,9 @@ export function FriendsPage() {
                     className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <Avatar email={f.user.email} />
+                      <Avatar user={f.user} />
                       <div className="min-w-0 flex-1 truncate text-sm font-semibold">
-                        {f.user.email}
+                        {displayName(f.user)}
                       </div>
                     </div>
                     <div className="flex gap-2 sm:shrink-0">
@@ -230,14 +235,14 @@ export function FriendsPage() {
               <Card className="divide-border divide-y overflow-hidden p-0">
                 {outgoing.map((f) => (
                   <div key={f.id} className="flex items-center gap-3 px-4 py-3">
-                    <Avatar email={f.user.email} />
+                    <Avatar user={f.user} />
                     <div className="min-w-0 flex-1 truncate text-sm font-semibold">
-                      {f.user.email}
+                      {displayName(f.user)}
                     </div>
                     <Tag className="hidden sm:inline-flex">Pending</Tag>
                     <Menu
                       trigger={<MoreIcon size={18} />}
-                      label={`Actions for request to ${f.user.email}`}
+                      label={`Actions for request to ${displayName(f.user)}`}
                       items={[
                         {
                           label: "Cancel request",
@@ -278,10 +283,10 @@ export function FriendsPage() {
   );
 }
 
-function Avatar({ email }: { email: string }) {
+function Avatar({ user }: { user: FriendUserOut }) {
   return (
     <div className="bg-surface-3 text-primary num flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm uppercase">
-      {email[0] ?? "?"}
+      {displayName(user)[0] ?? "?"}
     </div>
   );
 }
@@ -295,13 +300,13 @@ function FriendRow({
 }) {
   return (
     <div className="hover:bg-surface-2 flex items-center gap-3 px-4 py-3 transition-colors">
-      <Avatar email={friendship.user.email} />
+      <Avatar user={friendship.user} />
       <div className="min-w-0 flex-1 truncate text-sm font-semibold">
-        {friendship.user.email}
+        {displayName(friendship.user)}
       </div>
       <Menu
         trigger={<MoreIcon size={18} />}
-        label={`Actions for ${friendship.user.email}`}
+        label={`Actions for ${displayName(friendship.user)}`}
         items={[
           {
             label: "Remove friend",

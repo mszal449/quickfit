@@ -21,7 +21,9 @@ class WorkoutLogStatus(enum.StrEnum):
 class WorkoutLog(BaseModel):
     __tablename__ = "workout_logs"
 
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
     plan_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("plans.id", ondelete="SET NULL"), index=True, nullable=True
     )
