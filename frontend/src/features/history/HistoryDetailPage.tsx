@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
-import { ChevronLeftIcon } from "../../components/icons";
+import { ChevronLeftIcon, ChevronRightIcon } from "../../components/icons";
 import { useToast } from "../../components/ui/useToast";
 import { getErrorMessage } from "../../api/client";
 import {
@@ -132,7 +132,18 @@ export function HistoryDetailPage() {
       <div className="flex flex-col gap-4">
         {groups.map((group) => (
           <div key={group.exercise_id}>
-            <h2 className="text-fg mb-2 font-semibold">{group.name}</h2>
+            <Link
+              to={`/exercises/${group.exercise_id}`}
+              className="group mb-2 flex items-center gap-1"
+            >
+              <h2 className="text-fg group-hover:text-primary font-semibold transition-colors">
+                {group.name}
+              </h2>
+              <ChevronRightIcon
+                size={16}
+                className="text-faint group-hover:text-primary transition-colors"
+              />
+            </Link>
             <HistorySetsTable sets={group.sets} />
           </div>
         ))}

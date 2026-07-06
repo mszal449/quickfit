@@ -5,3 +5,4 @@ context
 !.env.k8s.local.example
 .vscode
 *CLAUDE.md
+.local-image-tag

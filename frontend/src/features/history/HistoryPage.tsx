@@ -64,25 +64,32 @@ export function HistoryPage() {
           {history.map((w) => (
             <li key={w.id}>
               <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-                <Link
-                  to={`/history/${w.id}`}
-                  className="group min-w-0 flex-1 focus:outline-none"
-                >
-                  <h2 className="text-fg group-hover:text-primary truncate font-semibold transition-colors">
-                    {w.plan_name ? `${w.plan_name} · ` : ""}
-                    {w.session_name ?? "Freestyle session"}
-                  </h2>
-                  <div className="text-faint mt-0.5 font-mono text-xs">
-                    {relativeTime(w.started_at)}
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/history/${w.id}`}
+                    className="group block focus:outline-none"
+                  >
+                    <h2 className="text-fg group-hover:text-primary truncate font-semibold transition-colors">
+                      {w.plan_name ? `${w.plan_name} · ` : ""}
+                      {w.session_name ?? "Freestyle session"}
+                    </h2>
+                    <div className="text-faint mt-0.5 font-mono text-xs">
+                      {relativeTime(w.started_at)}
+                    </div>
+                  </Link>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {w.top_exercises.map((name, i) => (
-                      <Tag key={i} tone="muted">
-                        {name}
-                      </Tag>
+                    {w.top_exercises.map((ex) => (
+                      <Link key={ex.id} to={`/exercises/${ex.id}`}>
+                        <Tag
+                          tone="muted"
+                          className="hover:text-primary cursor-pointer transition-colors"
+                        >
+                          {ex.name}
+                        </Tag>
+                      </Link>
                     ))}
                   </div>
-                </Link>
+                </div>
 
                 <div className="border-border flex shrink-0 items-center gap-5 border-t pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5">
                   <Metric

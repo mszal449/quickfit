@@ -82,18 +82,30 @@ tasks:
     cmd: kubectl apply -k k8s/overlays/local
 
   build-local:
-    desc: "Build api+frontend images on the host docker and load them into minikube"
+    desc: "Build api+frontend images (tagged :latest and with the commit SHA) and load into minikube. Requires a clean working tree."
+    vars:
+      TAG:
+        sh: git rev-parse --short HEAD
+    preconditions:
+      - sh: '[ -z "$(git status --porcelain)" ]'
+        msg: "Working tree has uncommitted changes — commit before running build-local/redeploy-local"
     cmds:
-      - docker build -t quickfit-api --target runtime ./api
-      - docker build -t quickfit-frontend ./frontend
-      - minikube image load quickfit-api
-      - minikube image load quickfit-frontend
+      - docker build -t quickfit-api:latest -t quickfit-api:{{.TAG}} --target runtime ./api
+      - docker build -t quickfit-frontend:latest -t quickfit-frontend:{{.TAG}} ./frontend
+      - minikube image load quickfit-api:latest
+      - minikube image load quickfit-api:{{.TAG}}
+      - minikube image load quickfit-frontend:latest
+      - minikube image load quickfit-frontend:{{.TAG}}
+      - echo "{{.TAG}}" > .local-image-tag
 
   redeploy-local:
-    desc: "Build, load, and restart backend+frontend deployments on minikube"
+    desc: "Build, load, and roll out backend+frontend on minikube, tagged to the current commit. Requires a clean working tree."
     cmds:
       - task: build-local
-      - kubectl rollout restart deployment backend frontend
+      - kubectl set image deployment/backend backend=quickfit-api:$(cat .local-image-tag)
+      - kubectl set image deployment/frontend frontend=quickfit-frontend:$(cat .local-image-tag)
+      - kubectl rollout status deployment/backend
+      - kubectl rollout status deployment/frontend
 
   secrets-local:
     desc: "Create/update k8s secrets on the current cluster context from .env.k8s.local"
@@ -111,4 +123,5 @@ tasks:
         --from-literal=JWT_SECRET=$JWT_SECRET
         --from-literal=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
         --from-literal=GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+        --from-literal=GOOGLE_REDIRECT_URI=$GOOGLE_REDIRECT_URI
         --dry-run=client -o yaml | kubectl apply -f -

@@ -4,6 +4,11 @@ import { useGetExercisesGet } from "../../api/generated/exercise/exercise";
 import { WorkoutLogStatus } from "../../api/generated/quickfitApi.schemas";
 import { usePlansWithSessions } from "../plans/usePlansWithSessions";
 
+export interface WorkoutHistoryExercise {
+  id: string;
+  name: string;
+}
+
 export interface WorkoutHistoryItem {
   id: string;
   started_at: string;
@@ -12,7 +17,7 @@ export interface WorkoutHistoryItem {
   session_name: string | null;
   total_sets: number;
   total_volume_kg: number;
-  top_exercises: string[];
+  top_exercises: WorkoutHistoryExercise[];
 }
 
 const MAX_TOP_EXERCISES = 3;
@@ -87,7 +92,7 @@ export function useWorkoutHistory() {
           total_volume_kg,
           top_exercises: orderedExerciseIds
             .slice(0, MAX_TOP_EXERCISES)
-            .map((id) => exerciseNameById.get(id) ?? "Exercise"),
+            .map((id) => ({ id, name: exerciseNameById.get(id) ?? "Exercise" })),
         };
       });
   }, [logsPage, planNameById, sessionNameById, exerciseNameById]);
