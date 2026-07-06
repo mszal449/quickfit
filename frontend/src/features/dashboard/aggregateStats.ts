@@ -187,13 +187,15 @@ export function buildExerciseProgressSeries(
         (sum, s) => sum + (s.duration_seconds ?? 0),
         0,
       );
-      if (totalSeconds > 0) points.push({ date: log.started_at, value: totalSeconds });
+      if (totalSeconds > 0)
+        points.push({ date: log.started_at, value: totalSeconds });
     } else {
       const topWeight = sets.reduce<number | null>((best, s) => {
         if (s.weight == null) return best;
         return best == null || s.weight > best ? s.weight : best;
       }, null);
-      if (topWeight != null) points.push({ date: log.started_at, value: topWeight });
+      if (topWeight != null)
+        points.push({ date: log.started_at, value: topWeight });
     }
   }
   return points;

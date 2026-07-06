@@ -14,7 +14,11 @@ import { formatFullDate, relativeTime } from "../../lib/format";
 import { getErrorMessage } from "../../api/client";
 import { useToast } from "../../components/ui/useToast";
 import { useDeleteMeDelete } from "../../api/generated/auth/auth";
-import { getUnits, setUnits as persistUnits, type Units } from "../../lib/preferences";
+import {
+  getUnits,
+  setUnits as persistUnits,
+  type Units,
+} from "../../lib/preferences";
 
 export function AccountPage() {
   const { data: user, isLoading } = useCurrentUser();

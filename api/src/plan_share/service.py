@@ -111,9 +111,7 @@ async def list_plan_shares(
     plan_name_by_id = {plan_id: name for plan_id, name in plans_req.all()}
 
     return [
-        _to_plan_share_out(
-            s, users_by_id[_other_user_id(s, user_id)], plan_name_by_id[s.plan_id]
-        )
+        _to_plan_share_out(s, users_by_id[_other_user_id(s, user_id)], plan_name_by_id[s.plan_id])
         for s in shares
     ]
 
