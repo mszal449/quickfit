@@ -197,7 +197,7 @@ jobs:
         working-directory: k8s/overlays/prod
         run: |
           kustomize edit set image \
-            quickfit-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} |
+            quickfit-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} \
             quickfit-frontend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${TAG}
           kubectl apply -k .
 
