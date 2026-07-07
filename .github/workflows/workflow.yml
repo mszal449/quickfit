@@ -195,7 +195,7 @@ jobs:
         run: |
           SAFE_TAG=$(echo "${TAG}" | tr '.' '-')
           kubectl delete job migrate-${SAFE_TAG} --ignore-not-found
-          kubectl create job migrate-${SAFE_TAG} --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} -- alembic upgrade head
+          kubectl create job migrate-${SAFE_TAG} --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} -- sh -c "cd /app && alembic upgrade head"
           kubectl wait --for=condition=complete job/migrate-${SAFE_TAG} --timeout=120s
 
       - name: Deploy images
