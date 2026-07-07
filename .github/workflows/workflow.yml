@@ -187,6 +187,10 @@ jobs:
             --from-literal=GOOGLE_REDIRECT_URI="${{ secrets.PROD_GOOGLE_REDIRECT_URI }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Ensure infrastructure exists
+        working-directory: k8s/overlays/prod
+        run: kubectl apply -k .
+
       - name: Run migrations
         run: |
           SAFE_TAG=$(echo "${TAG}" | tr '.' '-')
@@ -194,7 +198,7 @@ jobs:
           kubectl create job migrate-${SAFE_TAG} --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} -- alembic upgrade head
           kubectl wait --for=condition=complete job/migrate-${SAFE_TAG} --timeout=120s
 
-      - name: Deploy
+      - name: Deploy images
         working-directory: k8s/overlays/prod
         run: |
           kustomize edit set image \
