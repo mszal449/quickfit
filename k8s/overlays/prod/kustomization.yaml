@@ -12,16 +12,29 @@ images:
     newTag: latest
 
 patches:
-  - target:
+    - target:
+      kind: Ingress
+      name: quickfit
+      - target:
       kind: Ingress
       name: quickfit
     patch: |-
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt-prod
       - op: add
         path: /spec/ingressClassName
         value: nginx
       - op: replace
         path: /spec/rules/0/host
-        value: gohtonomi.com
+        value: twojadomena.com
+      - op: add
+        path: /spec/tls
+        value:
+          - hosts:
+              - gohtonomi.com
+            secretName: quickfit-tls
+
 
   - target:
       kind: Deployment
