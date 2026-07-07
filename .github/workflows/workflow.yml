@@ -187,15 +187,31 @@ jobs:
             --from-literal=GOOGLE_REDIRECT_URI="${{ secrets.PROD_GOOGLE_REDIRECT_URI }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Ensure infrastructure exists
-        working-directory: k8s/overlays/prod
-        run: kubectl apply -k .
+      - name: Ensure database exists
+        run: kubectl apply -f k8s/base/postgres-statefulset.yaml
 
       - name: Run migrations
         run: |
           SAFE_TAG=$(echo "${TAG}" | tr '.' '-')
           kubectl delete job migrate-${SAFE_TAG} --ignore-not-found
-          kubectl create job migrate-${SAFE_TAG} --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} -- sh -c "cd /app && alembic upgrade head"
+          cat <<EOF | kubectl apply -f -
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: migrate-${SAFE_TAG}
+          spec:
+            backoffLimit: 2
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: migrate
+                    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG}
+                    command: ["sh", "-c", "cd /app && alembic upgrade head"]
+                    envFrom:
+                      - secretRef:
+                          name: backend-secret
+          EOF
           kubectl wait --for=condition=complete job/migrate-${SAFE_TAG} --timeout=120s
 
       - name: Deploy images
