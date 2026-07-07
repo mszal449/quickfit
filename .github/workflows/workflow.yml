@@ -189,9 +189,10 @@ jobs:
 
       - name: Run migrations
         run: |
-          kubectl delete job migrate-${TAG} --ignore-not-found
-          kubectl create job migrate-${TAG} --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} -- alembic upgrade head
-          kubectl wait --for=condition=complete job/migrate-${TAG} --timeout=120s
+          SAFE_TAG=$(echo "${TAG}" | tr '.' '-')
+          kubectl delete job migrate-${SAFE_TAG} --ignore-not-found
+          kubectl create job migrate-${SAFE_TAG} --image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} -- alembic upgrade head
+          kubectl wait --for=condition=complete job/migrate-${SAFE_TAG} --timeout=120s
 
       - name: Deploy
         working-directory: k8s/overlays/prod
