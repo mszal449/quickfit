@@ -34,5 +34,5 @@ services:
       GOOGLE_CLIENT_SECRET: test-client-secret
       GOOGLE_REDIRECT_URI: http://localhost/callback
       GOOGLE_HEALTH_REDIRECT_URI: http://localhost/callback/health
-      INTEGRATION_SECRET: NLTRryyUY7ZUUs3DnCPKPSyiAsTPKB75UIYZDFx5j6Y
+      INTEGRATION_SECRET: NLTRryyUY7ZUUs3DnCPKPSyiAsTPKB75UIYZDFx5j6Y=
     entrypoint: ["uv", "run", "pytest", "tests/integration"]
