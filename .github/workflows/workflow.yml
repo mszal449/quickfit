@@ -186,7 +186,7 @@ jobs:
             --from-literal=GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}" \
             --from-literal=GOOGLE_REDIRECT_URI="${{ secrets.PROD_GOOGLE_REDIRECT_URI }}" \
             --from-literal=INTEGRATION_SECRET="${{ secrets.PROD_INTEGRATION_SECRET }}" \
-            --from-literal=GOOGLE_HEALTH_REDIRECT_URI="${{ secrets.GOOGLE_HEALTH_REDIRECT_URI }}" \
+            --from-literal=GOOGLE_HEALTH_REDIRECT_URI="${{ secrets.PROD_GOOGLE_HEALTH_REDIRECT_URI }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Ensure database exists
