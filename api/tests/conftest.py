@@ -7,4 +7,4 @@ os.environ.setdefault("GOOGLE_REDIRECT_URI", "http://localhost/api/auth/google/c
 os.environ.setdefault(
     "GOOGLE_HEALTH_REDIRECT_URI", "http://localhost/api/auth/google/callback/health"
 )
-os.environ.setdefault("INTEGRATION_SECRET", "NLTRryyUY7ZUUs3DnCPKPSyiAsTPKB75UIYZDFx5j6Y")
+os.environ.setdefault("INTEGRATION_SECRET", "NLTRryyUY7ZUUs3DnCPKPSyiAsTPKB75UIYZDFx5j6Y=")
