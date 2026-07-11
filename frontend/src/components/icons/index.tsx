@@ -116,6 +116,13 @@ export const MoreIcon = (p: IconProps) => (
   </Base>
 );
 
+export const ListIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+  </Base>
+);
+
 export const FlameIcon = (p: IconProps) => (
   <Base {...p}>
     <path d="M12 3c1 3 4 4.5 4 8a4 4 0 1 1-8 0c0-1.5.7-2.7 1.5-3.5C10 8.5 11 6 12 3Z" />

@@ -79,9 +79,12 @@ export function LiveSessionPage() {
 
   const exerciseCount = model?.exercises.length ?? 0;
   const lastIndex = exerciseCount - 1;
+  const safeIndex = Math.min(exerciseIndex, Math.max(0, exerciseCount - 1));
   const incompleteIndices =
     model?.exercises.reduce<number[]>((acc, ex, i) => {
-      if (isExerciseStarted(ex) && !isExerciseDone(ex)) acc.push(i);
+      const skipped =
+        !isExerciseDone(ex) && (isExerciseStarted(ex) || i < safeIndex);
+      if (skipped) acc.push(i);
       return acc;
     }, []) ?? [];
   const lastExerciseDone = model
@@ -124,7 +127,6 @@ export function LiveSessionPage() {
   }
 
   const isCompleted = model.status === "completed";
-  const safeIndex = Math.min(exerciseIndex, exerciseCount - 1);
   const exercise = model.exercises[safeIndex];
   const nextExercise = model.exercises[safeIndex + 1] ?? null;
 
@@ -219,6 +221,12 @@ export function LiveSessionPage() {
       .catch(() => {});
   };
 
+  const exerciseNav = model.exercises.map((ex, i) => ({
+    name: ex.name,
+    done: isExerciseDone(ex),
+    warn: incompleteIndices.includes(i),
+  }));
+
   return (
     <div className="bg-bg flex min-h-dvh flex-col">
       <SessionTopBar
@@ -227,6 +235,7 @@ export function LiveSessionPage() {
         exerciseCount={exerciseCount}
         currentExerciseIndex={safeIndex}
         incompleteIndices={incompleteIndices}
+        exercises={exerciseNav}
         onBack={() => navigate("/dashboard")}
         onFinish={() => setConfirmFinish(true)}
         onCancel={() => setConfirmCancel(true)}
