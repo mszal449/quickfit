@@ -15,7 +15,12 @@ class SetLog(BaseModel):
     __tablename__ = "set_logs"
     __table_args__ = (
         UniqueConstraint(
-            "workout_log_id", "exercise_id", "set_index", name="uq_set_logs_log_exercise_index"
+            "workout_log_id",
+            "exercise_id",
+            "set_index",
+            name="uq_set_logs_log_exercise_index",
+            deferrable=True,
+            initially="immediate",
         ),
     )
 

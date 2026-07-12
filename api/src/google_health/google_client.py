@@ -7,13 +7,12 @@ from fastapi import status
 from structlog import get_logger
 
 from common.exceptions import ExternalServiceError
+from google_health.const import GOOGLE_DATA_POINTS_URL, GOOGLE_HEALTH_API_URL
 from google_health.schema import ExerciseDataPoint
 from models.workout_log import WorkoutLog
 
-GOOGLE_HEALTH_API_URL = "https://health.googleapis.com/v4"
 STRENGTH_TRAINING_EXERCISE_TYPE = "STRENGTH_TRAINING"
 STRENGTH_TRAINING_DISPLAY_NAME = "Strength training"
-DATA_POINTS_URL = "/users/me/dataTypes/exercise/dataPoints"
 LOG = get_logger()
 
 
@@ -66,7 +65,7 @@ class GoogleClient:
         params: dict[str, str | int] = {"pageSize": 10}
         if since:
             params["filter"] = f'exercise.interval.civil_start_time >= "{since:%Y-%m-%dT%H:%M:%S}"'
-        resp = await self._http.get(DATA_POINTS_URL, params=params)
+        resp = await self._http.get(GOOGLE_DATA_POINTS_URL, params=params)
         data_points = [
             ExerciseDataPoint.model_validate(dp) for dp in resp.json().get("dataPoints", [])
         ]
@@ -91,7 +90,7 @@ class GoogleClient:
                 "notes": notes,
             }
         }
-        resp = await self._http.post(DATA_POINTS_URL, json=body)
+        resp = await self._http.post(GOOGLE_DATA_POINTS_URL, json=body)
         resp_body = resp.json()
         return ExerciseDataPoint.model_validate(resp_body)
 
@@ -103,11 +102,21 @@ class GoogleClient:
         )
 
 
+def hooked_client(
+    *,
+    base_url: str = "",
+    auth: httpx.Auth | None = None,
+    raise_on_error: bool = True,
+) -> httpx.AsyncClient:
+    response_hooks = [_log_response, _raise_on_error] if raise_on_error else [_log_response]
+    return httpx.AsyncClient(
+        base_url=base_url,
+        auth=auth,
+        event_hooks={"request": [_log_request], "response": response_hooks},
+    )
+
+
 @asynccontextmanager
 async def google_health_client(token: str) -> AsyncGenerator[GoogleClient]:
-    async with httpx.AsyncClient(
-        base_url=GOOGLE_HEALTH_API_URL,
-        auth=_BearerAuth(token),
-        event_hooks={"request": [_log_request], "response": [_log_response, _raise_on_error]},
-    ) as http:
+    async with hooked_client(base_url=GOOGLE_HEALTH_API_URL, auth=_BearerAuth(token)) as http:
         yield GoogleClient(http)

@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -229,6 +229,7 @@ async def remove_set(db: AsyncSession, user_id: UUID, workout_log_id: UUID, set_
     exercise_id = target.exercise_id
     await db.delete(target)
     await db.flush()
+    await db.execute(text("SET CONSTRAINTS uq_set_logs_log_exercise_index DEFERRED"))
 
     remaining = await db.execute(
         select(SetLog)
@@ -236,11 +237,6 @@ async def remove_set(db: AsyncSession, user_id: UUID, workout_log_id: UUID, set_
         .order_by(SetLog.set_index)
     )
     remaining_sets = remaining.scalars().all()
-    if remaining_sets:
-        temp_base = max(s.set_index for s in remaining_sets) + 1
-        for offset_index, set_log in enumerate(remaining_sets):
-            set_log.set_index = temp_base + offset_index
-        await db.flush()
     for index, set_log in enumerate(remaining_sets):
         set_log.set_index = index
     await db.flush()

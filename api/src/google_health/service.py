@@ -2,7 +2,6 @@ from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 from uuid import UUID
 
-import httpx
 from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +15,8 @@ from common.exceptions import (
     ValidationError,
 )
 from config.service import get_config
-from google_health.google_client import google_health_client
+from google_health.const import GOOGLE_AUTH_URL, GOOGLE_TOKEN_URL
+from google_health.google_client import google_health_client, hooked_client
 from google_health.schema import ExerciseDataPoint, TokenResponse
 from google_health.util import decrypt_token, encrypt_token
 from models.integration import Integration, IntegrationProvider
@@ -24,9 +24,6 @@ from models.workout_log import WorkoutLog
 from workout_log.service import get_todays_workout_logs
 from workout_log.summary import workout_summary
 
-GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-GOOGLE_HEALTH_API_URL = "https://health.googleapis.com/v4"
 MANUAL_CREATE_DELAY = timedelta(hours=2)
 
 LOG = get_logger()
@@ -162,7 +159,7 @@ async def handle_integration_callback(db: AsyncSession, user_id: UUID, code: str
     )
     db.add(integration)
     await db.flush()
-    LOG.info("integration_created", integration_id=str(integration.id), user_id=str(user_id))
+    LOG.info("integration_created", integration_id=integration.id, user_id=str(user_id))
 
 
 async def _get_access_token(db: AsyncSession, user_id: UUID) -> str:
@@ -173,7 +170,7 @@ async def _get_access_token(db: AsyncSession, user_id: UUID) -> str:
     decrypted = decrypt_token(integration.encrypted_refresh_token)
 
     cfg = get_config().google_oauth_config
-    async with httpx.AsyncClient() as client:
+    async with hooked_client(raise_on_error=False) as client:
         resp = await client.post(
             GOOGLE_TOKEN_URL,
             data={
@@ -198,7 +195,7 @@ async def _get_access_token(db: AsyncSession, user_id: UUID) -> str:
 
 async def exchange_code(code: str) -> TokenResponse:
     cfg = get_config().google_oauth_config
-    async with httpx.AsyncClient() as client:
+    async with hooked_client(raise_on_error=False) as client:
         resp = await client.post(
             GOOGLE_TOKEN_URL,
             data={
