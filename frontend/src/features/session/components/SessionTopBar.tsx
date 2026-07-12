@@ -157,7 +157,7 @@ export function SessionTopBar({
         {listOpen && exercises.length > 0 && (
           <div
             role="menu"
-            className="border-border bg-surface-2 absolute right-4 left-4 top-full z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-xl border p-1 shadow-xl shadow-black/40"
+            className="border-border bg-surface-2 absolute top-full right-4 left-4 z-50 mt-1 max-h-[60vh] overflow-y-auto rounded-xl border p-1 shadow-xl shadow-black/40"
           >
             {exercises.map((ex, i) => {
               const isCurrent = i === currentExerciseIndex;

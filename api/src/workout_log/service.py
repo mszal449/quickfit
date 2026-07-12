@@ -84,6 +84,16 @@ async def get_workout_log(db: AsyncSession, user_id: UUID, workout_log_id: UUID)
     return WorkoutLogOut.model_validate(log)
 
 
+async def get_todays_workout_logs(db: AsyncSession, user_id: UUID) -> list[WorkoutLog]:
+    day_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    logs = await db.execute(
+        select(WorkoutLog)
+        .where(WorkoutLog.user_id == user_id, WorkoutLog.completed_at >= day_start)
+        .options(selectinload(WorkoutLog.sets).selectinload(SetLog.exercise))
+    )
+    return list(logs.scalars().all())
+
+
 async def create_workout_log(
     db: AsyncSession, user_id: UUID, payload: WorkoutLogCreate
 ) -> WorkoutLogOut:

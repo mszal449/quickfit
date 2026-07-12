@@ -4,10 +4,7 @@ import "./index.css";
 import App from "./App.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastProvider } from "./components/ui/Toast";
-import {
-  persistQueryCache,
-  restoreQueryCache,
-} from "./lib/persistQueryCache";
+import { persistQueryCache, restoreQueryCache } from "./lib/persistQueryCache";
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -21,6 +21,8 @@ class ForbiddenError(AppError):
 class UnauthorizedError(AppError):
     pass
 
+class ValidationError(AppError):
+    pass
 
 class ExternalServiceError(AppError):
     pass

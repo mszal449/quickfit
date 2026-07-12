@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from models.model_base import BaseModel
 
 if TYPE_CHECKING:
+    from models.exercise import Exercise
     from models.workout_log import WorkoutLog
 
 
@@ -37,3 +38,4 @@ class SetLog(BaseModel):
     completed: Mapped[bool] = mapped_column(Boolean, default=True)
 
     workout_log: Mapped["WorkoutLog"] = relationship(back_populates="sets")
+    exercise: Mapped["Exercise"] = relationship()

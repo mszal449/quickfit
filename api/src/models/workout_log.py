@@ -3,7 +3,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Text
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +32,12 @@ class WorkoutLog(BaseModel):
     )
     status: Mapped[WorkoutLogStatus] = mapped_column(
         SAEnum(WorkoutLogStatus), default=WorkoutLogStatus.IN_PROGRESS, index=True
+    )
+    synchronized: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None, index=True
+    )
+    sync_datapoint_name: Mapped[str | None] = mapped_column(
+        String(512), nullable=True, unique=True, default=None
     )
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True

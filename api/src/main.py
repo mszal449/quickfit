@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI, Request, status
@@ -15,7 +14,9 @@ from common.exceptions import (
     ForbiddenError,
     NotFoundError,
     UnauthorizedError,
+    ValidationError,
 )
+from common.logging_config import configure_logging
 from config.db import close_db, init_db
 from config.middleware import DbSessionMiddleware, RequestLoggingMiddleware
 from config.service import get_config
@@ -40,6 +41,7 @@ def custom_operation_id(route: APIRoute) -> str:
 _STATUS_BY_EXCEPTION: dict[type[AppError], int] = {
     NotFoundError: status.HTTP_404_NOT_FOUND,
     ConflictError: status.HTTP_409_CONFLICT,
+    ValidationError: status.HTTP_409_CONFLICT,
     ForbiddenError: status.HTTP_403_FORBIDDEN,
     UnauthorizedError: status.HTTP_401_UNAUTHORIZED,
     ExternalServiceError: status.HTTP_502_BAD_GATEWAY,
@@ -70,12 +72,13 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 def log_info(req_body, res_body):
-    logging.info("BODY:", req_body)
-    logging.info(res_body)
+    LOG.info("BODY:", req_body)
+    LOG.info(res_body)
 
 
 def create_app():
     cfg = get_config()
+    configure_logging("debug" if cfg.debug else "info")
     app = FastAPI(
         title="quickfit-api",
         description="QuickFit API",

@@ -42,7 +42,7 @@ async def callback(code: str, state: str, req: Request, db: DbSession):
 
 @router.get("/status", response_model=IntegrationStatusOut)
 async def status_integration(user_id: CurrentUserId, db: DbSession):
-    integration = await service.get_integration_status(db, user_id)
+    integration = await service.get_user_integration(db, user_id)
     if integration is None:
         return IntegrationStatusOut(connected=False)
     return IntegrationStatusOut(
@@ -54,7 +54,7 @@ async def status_integration(user_id: CurrentUserId, db: DbSession):
 
 @router.get("/workouts")
 async def workouts(user_id: CurrentUserId, db: DbSession):
-    return await service.read_exercises(db, user_id)
+    return await service.list_datapoints(db, user_id)
 
 
 @router.delete("/revoke", status_code=status.HTTP_204_NO_CONTENT)
