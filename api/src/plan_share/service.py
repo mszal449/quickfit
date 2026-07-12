@@ -65,7 +65,6 @@ async def _get_related_plan_share(
     )
     share = req.scalar_one_or_none()
     if share is None:
-        LOG.warning("plan_share_not_found", plan_share_id=str(plan_share_id), user_id=str(user_id))
         raise NotFoundError("Plan share not found")
     return share
 
@@ -123,7 +122,6 @@ async def create_plan_share(
 
     target = await User.get(db, payload.shared_with_user_id)
     if target is None:
-        LOG.warning("plan_share_target_not_found", target_id=str(payload.shared_with_user_id))
         raise NotFoundError("User not found")
     if target.id == user_id:
         raise ConflictError("Cannot share a plan with yourself")
@@ -153,7 +151,7 @@ async def create_plan_share(
         await db.rollback()
         if integrity_error_constraint(exc) != _UNIQUE_SHARE_CONSTRAINT:
             raise
-        LOG.warning("plan_share_conflict", user_id=str(user_id), target_id=str(target.id))
+        LOG.debug("plan_share_conflict", user_id=str(user_id), target_id=str(target.id))
         raise ConflictError("Plan already shared with this user") from None
     await db.refresh(share)
     LOG.info("plan_share_created", plan_share_id=str(share.id), user_id=str(user_id))
@@ -224,7 +222,6 @@ async def get_share_progress(
     )
     share = req.scalar_one_or_none()
     if share is None:
-        LOG.warning("plan_share_not_found", plan_share_id=str(plan_share_id), user_id=str(user_id))
         raise NotFoundError("Plan share not found")
     if share.status != PlanShareStatus.ACCEPTED:
         raise ConflictError("Share is not active")

@@ -41,7 +41,7 @@ def custom_operation_id(route: APIRoute) -> str:
 _STATUS_BY_EXCEPTION: dict[type[AppError], int] = {
     NotFoundError: status.HTTP_404_NOT_FOUND,
     ConflictError: status.HTTP_409_CONFLICT,
-    ValidationError: status.HTTP_409_CONFLICT,
+    ValidationError: status.HTTP_422_UNPROCESSABLE_ENTITY,
     ForbiddenError: status.HTTP_403_FORBIDDEN,
     UnauthorizedError: status.HTTP_401_UNAUTHORIZED,
     ExternalServiceError: status.HTTP_502_BAD_GATEWAY,
@@ -57,6 +57,15 @@ async def lifespan(app: FastAPI):
 
 async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     code = _STATUS_BY_EXCEPTION.get(type(exc), status.HTTP_400_BAD_REQUEST)
+    if code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
+        LOG.error(
+            "server_error",
+            error=type(exc).__name__,
+            path=request.url.path,
+            method=request.method,
+            extra=exc.extra,
+            exc_info=exc,
+        )
     content: dict = {"detail": str(exc)}
     if exc.extra:
         content["extra"] = exc.extra
@@ -69,11 +78,6 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Something went wrong. Please try again later."},
     )
-
-
-def log_info(req_body, res_body):
-    LOG.info("BODY:", req_body)
-    LOG.info(res_body)
 
 
 def create_app():
@@ -106,12 +110,6 @@ def create_app():
 
 def register_routers(app: FastAPI):
     api_router = APIRouter(prefix="/api")
-
-    @api_router.post("/debug")
-    async def debug(request: Request):
-        print(await request.body())
-        print(await request.json())
-
     api_router.include_router(health_router.router)
     api_router.include_router(auth_router.router)
     api_router.include_router(plan_router.router)

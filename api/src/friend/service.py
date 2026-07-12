@@ -49,7 +49,6 @@ async def _get_related_friendship(
     )
     friendship = req.scalar_one_or_none()
     if friendship is None:
-        LOG.warning("friendship_not_found", friendship_id=str(friendship_id), user_id=str(user_id))
         raise NotFoundError("Friendship not found")
     return friendship
 
@@ -80,7 +79,6 @@ async def send_friend_request(
     req = await db.execute(select(User).where(User.email == payload.email))
     addressee = req.scalar_one_or_none()
     if addressee is None:
-        LOG.warning("friend_request_target_not_found", email=payload.email)
         raise NotFoundError("User not found")
     if addressee.id == user_id:
         raise ConflictError("Cannot send a friend request to yourself")
@@ -117,7 +115,7 @@ async def send_friend_request(
         await db.rollback()
         if integrity_error_constraint(exc) != _UNIQUE_PAIR_CONSTRAINT:
             raise
-        LOG.warning("friendship_conflict", user_id=str(user_id), addressee_id=str(addressee.id))
+        LOG.debug("friendship_conflict", user_id=str(user_id), addressee_id=str(addressee.id))
         raise ConflictError("Friend request already exists") from None
     await db.refresh(friendship)
     LOG.info("friend_request_sent", friendship_id=str(friendship.id), user_id=str(user_id))

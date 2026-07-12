@@ -1,4 +1,5 @@
 from typing import Annotated
+import uuid
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from structlog import get_logger
+import structlog
 
 from config.db import get_session_factory
 
@@ -18,18 +20,21 @@ class RequestLoggingMiddleware:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http":
+        structlog.contextvars.bind_contextvars(request_id=str(uuid.uuid4()))
+        try:
             await self.app(scope, receive, send)
-            return
+        finally:
+            structlog.contextvars.clear_contextvars()
 
-        chunks: list[Message] = []
-        body = b""
-        more_body = True
-        while more_body:
-            message = await receive()
-            chunks.append(message)
-            body += message.get("body", b"")
-            more_body = message.get("more_body", False)
+        status_code: int | None = None
+
+        async def send_wrapper(message: Message) -> None:
+            nonlocal status_code
+            if message["type"] == "http.response.start":
+                status_code = message["status"]
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
 
         LOG.info(
             "http_request",
@@ -37,13 +42,8 @@ class RequestLoggingMiddleware:
             path=scope["path"],
             query=scope.get("query_string", b"").decode("latin-1"),
             content_type=_header(scope, b"content-type"),
-            body=body.decode("utf-8", "replace"),
+            status=status_code,
         )
-
-        async def replay() -> Message:
-            return chunks.pop(0) if chunks else {"type": "http.request", "body": b""}
-
-        await self.app(scope, replay, send)
 
 
 def _header(scope: Scope, name: bytes) -> str | None:

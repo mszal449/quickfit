@@ -8,21 +8,7 @@ from config.middleware import DbSession
 from models.user import User, UserRole
 
 
-async def get_current_user(req: Request, db: DbSession) -> User:
-    token = req.cookies.get("access_token")
-    if not token:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-    try:
-        payload = decode_access_token(token)
-    except InvalidTokenError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED) from None
-    user = await User.get(db, payload.sub)
-    if user is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
-    return user
-
-
-async def get_current_user_id(req: Request) -> uuid.UUID:
+def _sub_from_cookie(req: Request) -> uuid.UUID:
     token = req.cookies.get("access_token")
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
@@ -31,6 +17,17 @@ async def get_current_user_id(req: Request) -> uuid.UUID:
     except InvalidTokenError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED) from None
     return payload.sub
+
+
+async def get_current_user(req: Request, db: DbSession) -> User:
+    user = await User.get(db, _sub_from_cookie(req))
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+    return user
+
+
+async def get_current_user_id(req: Request) -> uuid.UUID:
+    return _sub_from_cookie(req)
 
 
 def require_role(role: UserRole):

@@ -53,7 +53,6 @@ async def update_plan_session(
     )
     session = req.scalar_one_or_none()
     if session is None:
-        LOG.warning("plan_session_not_found", plan_session_id=str(plan_session_id))
         raise NotFoundError("Plan session not found")
 
     if payload.name is not None:
@@ -77,7 +76,6 @@ async def get_plan_session(
     )
     session = req.scalar_one_or_none()
     if session is None:
-        LOG.warning("plan_session_not_found", plan_session_id=str(plan_session_id))
         raise NotFoundError("Plan session not found")
     return PlanSessionOut.model_validate(session)
 
@@ -103,9 +101,6 @@ async def get_plan_session_by_id(
     )
     session = req.scalar_one_or_none()
     if session is None:
-        LOG.warning(
-            "plan_session_not_found", plan_session_id=str(plan_session_id), user_id=str(user_id)
-        )
         raise NotFoundError("Plan session not found")
     return PlanSessionOut.model_validate(session)
 
@@ -118,6 +113,5 @@ async def delete_plan_session(
         delete(PlanSession).where(PlanSession.id == plan_session_id, PlanSession.plan_id == plan_id)
     )
     if result.rowcount == 0:  # type: ignore[attr-defined]
-        LOG.warning("plan_session_not_found", plan_session_id=str(plan_session_id))
         raise NotFoundError("Plan session not found")
     LOG.info("plan_session_deleted", plan_session_id=str(plan_session_id))

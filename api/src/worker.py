@@ -1,6 +1,6 @@
 import asyncio
 
-from structlog import getLogger
+from structlog import get_logger
 
 from common.exceptions import AppError
 from common.logging_config import configure_logging
@@ -8,8 +8,7 @@ from config.db import close_db, get_session_factory, init_db
 from config.service import get_config
 from google_health import service as gh_service
 
-LOG = getLogger()
-
+LOG = get_logger()
 
 
 async def run_sync():

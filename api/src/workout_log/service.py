@@ -56,9 +56,6 @@ async def _get_owned_workout_log(
     )
     log = req.scalar_one_or_none()
     if log is None:
-        LOG.warning(
-            "workout_log_not_found", workout_log_id=str(workout_log_id), user_id=str(user_id)
-        )
         raise NotFoundError("Workout log not found")
     return log
 
@@ -120,7 +117,7 @@ async def create_workout_log(
         await db.rollback()
         if integrity_error_constraint(exc) != _SET_INDEX_CONSTRAINT:
             raise
-        LOG.warning("workout_log_duplicate_set_index", user_id=str(user_id))
+        LOG.debug("workout_log_duplicate_set_index", user_id=str(user_id))
         raise ConflictError("Duplicate set position for the same exercise") from None
     await db.refresh(log, attribute_names=["sets"])
     LOG.info("workout_log_created", workout_log_id=str(log.id), user_id=str(user_id))
@@ -132,7 +129,6 @@ async def update_workout_log(
 ) -> WorkoutLogOut:
     log = await _get_owned_workout_log(db, user_id, workout_log_id)
     if log.status == WorkoutLogStatus.COMPLETED and payload.model_fields_set - {"notes"}:
-        LOG.warning("workout_log_completed", workout_log_id=str(workout_log_id))
         raise ConflictError("Cannot edit a completed workout, except notes")
 
     if payload.started_at is not None:
@@ -157,7 +153,7 @@ async def update_workout_log(
         await db.rollback()
         if integrity_error_constraint(exc) != _SET_INDEX_CONSTRAINT:
             raise
-        LOG.warning("workout_log_duplicate_set_index", workout_log_id=str(workout_log_id))
+        LOG.debug("workout_log_duplicate_set_index", workout_log_id=str(workout_log_id))
         raise ConflictError("Duplicate set position for the same exercise") from None
     await db.refresh(log, attribute_names=["sets"])
     LOG.info("workout_log_updated", workout_log_id=str(workout_log_id), user_id=str(user_id))
@@ -169,9 +165,6 @@ async def delete_workout_log(db: AsyncSession, user_id: UUID, workout_log_id: UU
         delete(WorkoutLog).where(WorkoutLog.id == workout_log_id, WorkoutLog.user_id == user_id)
     )
     if result.rowcount == 0:  # type: ignore[attr-defined]
-        LOG.warning(
-            "workout_log_not_found", workout_log_id=str(workout_log_id), user_id=str(user_id)
-        )
         raise NotFoundError("Workout log not found")
     LOG.info("workout_log_deleted", workout_log_id=str(workout_log_id), user_id=str(user_id))
 
@@ -181,7 +174,6 @@ async def add_set(
 ) -> SetLogOut:
     log = await _get_owned_workout_log(db, user_id, workout_log_id)
     if log.status == WorkoutLogStatus.COMPLETED:
-        LOG.warning("workout_log_completed", workout_log_id=str(workout_log_id))
         raise ConflictError("Cannot add a set to a completed workout")
 
     await assert_exercises_exist(db, {payload.exercise_id})
@@ -210,7 +202,7 @@ async def add_set(
         await db.rollback()
         if integrity_error_constraint(exc) != _SET_INDEX_CONSTRAINT:
             raise
-        LOG.warning("set_log_index_conflict", workout_log_id=str(workout_log_id))
+        LOG.debug("set_log_index_conflict", workout_log_id=str(workout_log_id))
         raise ConflictError("Set already recorded for this position") from None
     await db.refresh(set_log)
     LOG.info(
@@ -225,7 +217,6 @@ async def add_set(
 async def remove_set(db: AsyncSession, user_id: UUID, workout_log_id: UUID, set_id: UUID) -> None:
     log = await _get_owned_workout_log(db, user_id, workout_log_id)
     if log.status == WorkoutLogStatus.COMPLETED:
-        LOG.warning("workout_log_completed", workout_log_id=str(workout_log_id))
         raise ConflictError("Cannot remove a set from a completed workout")
 
     req = await db.execute(
@@ -233,7 +224,6 @@ async def remove_set(db: AsyncSession, user_id: UUID, workout_log_id: UUID, set_
     )
     target = req.scalar_one_or_none()
     if target is None:
-        LOG.warning("set_log_not_found", set_id=str(set_id), workout_log_id=str(workout_log_id))
         raise NotFoundError("Set not found")
 
     exercise_id = target.exercise_id
@@ -262,7 +252,6 @@ async def update_set(
 ) -> SetLogOut:
     log = await _get_owned_workout_log(db, user_id, workout_log_id)
     if log.status == WorkoutLogStatus.COMPLETED:
-        LOG.warning("workout_log_completed", workout_log_id=str(workout_log_id))
         raise ConflictError("Cannot modify a set on a completed workout")
 
     req = await db.execute(
@@ -270,7 +259,6 @@ async def update_set(
     )
     set_log = req.scalar_one_or_none()
     if set_log is None:
-        LOG.warning("set_log_not_found", set_id=str(set_id), workout_log_id=str(workout_log_id))
         raise NotFoundError("Set not found")
 
     fields_set = payload.model_fields_set

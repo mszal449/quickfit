@@ -17,6 +17,7 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 def init_db(cfg: DatabaseConfig) -> AsyncEngine:
     if _engine is not None:
         LOG.error("init database called after already initialized")
+        return _engine
 
     engine = create_async_engine(cfg.db_url, echo=False, future=True, pool_pre_ping=True)
     set_database_engine(engine)
@@ -31,10 +32,7 @@ async def close_db() -> None:
 def set_database_engine(engine: AsyncEngine):
     global _engine, _session_factory
     _engine = engine
-    if _engine is None:
-        _session_factory = None
-    else:
-        _session_factory = async_sessionmaker(bind=_engine, expire_on_commit=False, autoflush=False)
+    _session_factory = async_sessionmaker(bind=engine, expire_on_commit=False, autoflush=False)
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:

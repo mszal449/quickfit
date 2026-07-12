@@ -25,7 +25,6 @@ async def _get_owned_exercise(db: AsyncSession, user_id: UUID, exercise_id: UUID
     )
     exercise = req.scalar_one_or_none()
     if exercise is None:
-        LOG.warning("exercise_not_found", exercise_id=str(exercise_id), owner_id=str(user_id))
         raise NotFoundError("Exercise not found")
     return exercise
 
@@ -68,7 +67,6 @@ async def get_exercise(db: AsyncSession, exercise_id: UUID) -> ExerciseOut:
     )
     exercise = req.scalar_one_or_none()
     if exercise is None:
-        LOG.warning("exercise_not_found", exercise_id=str(exercise_id))
         raise NotFoundError("Exercise not found")
     return ExerciseOut.model_validate(exercise)
 
@@ -90,7 +88,7 @@ async def create_user_exercise(
         await db.rollback()
         if integrity_error_constraint(exc) != "uq_exercises_owner_name_active":
             raise
-        LOG.warning("exercise_name_conflict", owner_id=str(user_id), name=payload.name)
+        LOG.debug("exercise_name_conflict", owner_id=str(user_id), name=payload.name)
         raise ConflictError(
             "Exercise with this name already exists",
             extra={"name": payload.name},
@@ -122,7 +120,7 @@ async def update_user_exercise(
         await db.rollback()
         if integrity_error_constraint(exc) != "uq_exercises_owner_name_active":
             raise
-        LOG.warning("exercise_name_conflict", owner_id=str(user_id), name=payload.name)
+        LOG.debug("exercise_name_conflict", owner_id=str(user_id), name=payload.name)
         raise ConflictError(
             "Exercise with this name already exists",
             extra={"name": payload.name},
@@ -139,7 +137,6 @@ async def delete_user_exercise(db: AsyncSession, user_id: UUID, exercise_id: UUI
         .values(is_archived=True)
     )
     if result.rowcount == 0:  # type: ignore[attr-defined]
-        LOG.warning("exercise_not_found", exercise_id=str(exercise_id), owner_id=str(user_id))
         raise NotFoundError("Exercise not found")
     LOG.info("exercise_deleted", exercise_id=str(exercise_id), owner_id=str(user_id))
 
@@ -154,7 +151,6 @@ async def assert_exercises_exist(db: AsyncSession, exercise_ids: set[UUID]) -> N
     missing = exercise_ids - found
     if missing:
         missing_ids = sorted(str(m) for m in missing)
-        LOG.warning("unknown_exercises", missing=missing_ids)
         raise NotFoundError(
             "One or more exercises do not exist",
             extra={"missing_exercise_ids": missing_ids},

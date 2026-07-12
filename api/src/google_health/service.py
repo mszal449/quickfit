@@ -101,9 +101,7 @@ async def sync_user(db: AsyncSession, user_id: UUID) -> int:
             created_count += 1
         await db.flush()
 
-        LOG.info(
-            "user_sync_completed", updated=synced_count, created=created_count
-        )
+        LOG.info("user_sync_completed", updated=synced_count, created=created_count)
         return synced_count
 
 
@@ -114,7 +112,7 @@ async def revoke_integration(db: AsyncSession, user_id: UUID):
         raise NotFoundError("Integration not found")
     await db.delete(existing)
     await db.flush()
-    LOG.info("google_health_integration_revoked", user_id=user_id)
+    LOG.info("google_health_integration_revoked", user_id=str(user_id))
 
 
 async def get_user_integration(db: AsyncSession, user_id: UUID) -> Integration | None:
@@ -164,7 +162,7 @@ async def handle_integration_callback(db: AsyncSession, user_id: UUID, code: str
     )
     db.add(integration)
     await db.flush()
-    LOG.info("integration_created", integration_id=integration.id, user_id=str(user_id))
+    LOG.info("integration_created", integration_id=str(integration.id), user_id=str(user_id))
 
 
 async def _get_access_token(db: AsyncSession, user_id: UUID) -> str:
