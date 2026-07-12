@@ -1,6 +1,7 @@
-from typing import Annotated
 import uuid
+from typing import Annotated
 
+import structlog
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -8,7 +9,6 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from structlog import get_logger
-import structlog
 
 from config.db import get_session_factory
 
