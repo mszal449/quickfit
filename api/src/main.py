@@ -41,7 +41,7 @@ def custom_operation_id(route: APIRoute) -> str:
 _STATUS_BY_EXCEPTION: dict[type[AppError], int] = {
     NotFoundError: status.HTTP_404_NOT_FOUND,
     ConflictError: status.HTTP_409_CONFLICT,
-    ValidationError: status.HTTP_422_UNPROCESSABLE_ENTITY,
+    ValidationError: status.HTTP_422_UNPROCESSABLE_CONTENT,
     ForbiddenError: status.HTTP_403_FORBIDDEN,
     UnauthorizedError: status.HTTP_401_UNAUTHORIZED,
     ExternalServiceError: status.HTTP_502_BAD_GATEWAY,
