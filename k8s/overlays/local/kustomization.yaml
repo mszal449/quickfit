@@ -31,3 +31,11 @@ patches:
       - op: add
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: Never
+
+  - target:
+      kind: CronJob
+      name: worker
+    patch: |-
+      - op: add
+        path: /spec/jobTemplate/spec/template/spec/containers/0/imagePullPolicy
+        value: Never

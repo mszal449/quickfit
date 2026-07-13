@@ -18,7 +18,7 @@ COPY tests/ tests/
 ENTRYPOINT [ "uv", "run", "pytest" ]
 
 
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.13-slim-bookworm AS runtime-base
 
 WORKDIR /app
 COPY --from=builder /app /app
@@ -27,5 +27,12 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 
 WORKDIR /app/src
+
+FROM runtime-base as api-runtime
+
 EXPOSE 8000
 CMD ["uvicorn", "main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+
+
+FROM runtime-base as worker-runtime
+CMD ["python", "worker.py"]

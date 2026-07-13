@@ -6,3 +6,4 @@ resources:
   - backend-deployment.yaml
   - frontend-deployment.yaml
   - ingress.yaml
+  - worker-cronjob.yaml

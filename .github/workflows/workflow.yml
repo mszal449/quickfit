@@ -5,6 +5,7 @@ on: push
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME_API: ${{ github.repository_owner }}/quickfit-api
+  IMAGE_NAME_WORKER: ${{ github.repository_owner }}/quickfit-worker
   IMAGE_NAME_FRONTEND: ${{ github.repository_owner }}/quickfit-frontend
 
 jobs:
@@ -132,10 +133,22 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./api
-          target: runtime
+          target: api-runtime
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${{ github.sha }}
+            ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/{1}:{2}', env.REGISTRY, env.IMAGE_NAME_API, github.ref_name) || '' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push sync worker (runtime)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          target: worker-runtime
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WORKER }}:${{ github.sha }}
             ${{ startsWith(github.ref, 'refs/tags/') && format('{0}/{1}:{2}', env.REGISTRY, env.IMAGE_NAME_API, github.ref_name) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
