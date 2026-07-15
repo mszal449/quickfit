@@ -215,7 +215,9 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Ensure database exists
-        run: kubectl apply -n quickfit -f k8s/base/postgres-statefulset.yaml
+        run: |
+          kubectl apply -n quickfit -f k8s/base/postgres-statefulset.yaml
+          kubectl rollout status statefulset/postgres -n quickfit --timeout=180s
 
       - name: Run migrations
         run: |
@@ -246,7 +248,7 @@ jobs:
         run: |
           kustomize edit set image \
             quickfit-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_API }}:${TAG} \
-            quickfit-frontend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${TAG}
+            quickfit-frontend=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${TAG} \
             quickfit-worker=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_WORKER }}:${TAG}
           kubectl apply -k .
 
