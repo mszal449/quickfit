@@ -136,9 +136,7 @@ async def test_sync_matches_workouts_to_datapoints(
     assert all(workout.sync_datapoint_name is not None for workout in workouts)
 
 
-async def test_status_reports_connected_integration(
-    client: AsyncClient, integration: Integration
-):
+async def test_status_reports_connected_integration(client: AsyncClient, integration: Integration):
     res = await client.get(STATUS_URL)
 
     assert res.status_code == status.HTTP_200_OK
